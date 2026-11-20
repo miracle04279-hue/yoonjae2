@@ -3,6 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0B1120">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="뀨뀨 미션">
     <title>뀨뀨 매일 미션 플래너</title>
     <!-- Tailwind CSS 로드 -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -151,7 +156,7 @@
                 <div>
                     <div class="flex items-center gap-1.5">
                         <h1 class="font-kid text-xl sm:text-2xl text-white tracking-wide">뀨뀨 매일 미션!</h1>
-                        <span id="sync-badge" class="text-[10px] px-2 py-0.5 rounded-full bg-blue-950 text-blue-300 border border-blue-700/60 font-bold">동기화 중...</span>
+                        <span id="sync-badge" class="text-[10px] px-2 py-0.5 rounded-full bg-blue-950 text-blue-300 border border-blue-700/60 font-bold">연결 중...</span>
                     </div>
                     <p class="text-xs text-blue-300/80 hidden sm:block">인천 유나이티드처럼 끝까지 포기하지 않아요! 🔵⚫</p>
                 </div>
@@ -811,7 +816,7 @@
                         if (t === tab) {
                             tabBtn.className = 'px-3 sm:px-2 sm:flex-1 py-3 text-center text-xs sm:text-base tab-active flex items-center justify-center gap-1 whitespace-nowrap shrink-0';
                         } else {
-                            tabBtn.className = 'px-3 sm:px-2 sm:flex-1 py-3 text-center text-xs sm:text-base text-slate-500 hover:text-slate-800 flex items-center justify-center gap-1 whitespace-nowrap shrink-0';
+                            tabBtn.className = 'px-3 sm:px-2 sm:flex-1 py-3 text-center text-xs sm:text-base text-slate-400 hover:text-white flex items-center justify-center gap-1 whitespace-nowrap shrink-0';
                         }
                     }
                 });
@@ -2288,13 +2293,50 @@
             });
 
             renderTodayView();
+
+            // 공유받은 기기에서 홈 화면에 추가해 앱처럼 실행할 수 있도록 매니페스트 및 아이콘 자동 연결
+            try {
+                const iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192"><rect width="192" height="192" rx="42" fill="#0B1120"/><rect x="10" y="10" width="172" height="172" rx="34" fill="none" stroke="#EAB308" stroke-width="6"/><text x="96" y="88" text-anchor="middle" fill="#60A5FA" font-family="sans-serif" font-size="38" font-weight="900">IUFC</text><text x="96" y="138" text-anchor="middle" fill="#F8FAFC" font-family="sans-serif" font-size="34" font-weight="800">뀨뀨</text></svg>`;
+                const iconUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(iconSvg);
+
+                const appleLink = document.createElement('link');
+                appleLink.rel = 'apple-touch-icon';
+                appleLink.href = iconUrl;
+                document.head.appendChild(appleLink);
+
+                const manifestData = {
+                    name: '뀨뀨 매일 미션 플래너',
+                    short_name: '뀨뀨 미션',
+                    start_url: './',
+                    scope: './',
+                    display: 'standalone',
+                    background_color: '#0B1120',
+                    theme_color: '#0B1120',
+                    icons: [
+                        {
+                            src: iconUrl,
+                            sizes: '192x192',
+                            type: 'image/svg+xml',
+                            purpose: 'any'
+                        }
+                    ]
+                };
+                const manifestBlob = new Blob([JSON.stringify(manifestData)], { type: 'application/manifest+json' });
+                const manifestUrl = URL.createObjectURL(manifestBlob);
+                const manifestLink = document.createElement('link');
+                manifestLink.rel = 'manifest';
+                manifestLink.href = manifestUrl;
+                document.head.appendChild(manifestLink);
+            } catch (e) {
+                console.warn('Manifest setup skipped:', e);
+            }
         })();
     </script>
 
-    <!-- 선택적 클라우드 동기화 (실패해도 로컬 UI에 영향을 주지 않음) -->
+    <!-- Firebase 실시간 자동 동기화 (뀽이 폰 ↔ 뀨뀨 폰 자동 연동) -->
     <script type="module">
         try {
-            const [{ initializeApp }, { getAuth, signInAnonymously, signInWithCustomToken }, { getFirestore, doc, setDoc, onSnapshot }] = await Promise.all([
+            const [{ initializeApp }, { getAuth, signInAnonymously }, { getFirestore, doc, setDoc, onSnapshot }] = await Promise.all([
                 import("https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js"),
                 import("https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js"),
                 import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js")
@@ -2303,48 +2345,60 @@
             const badge = document.getElementById('sync-badge');
             const appState = window.__plannerAppState;
 
-            if (typeof __firebase_config === 'undefined' || !__firebase_config || !appState) {
-                if (badge) {
-                    badge.textContent = '단독 실행 모드';
-                    badge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-slate-950 text-blue-300 border border-blue-800 font-bold';
-                }
-            } else {
-                const appId = typeof __app_id !== 'undefined' && __app_id ? __app_id : 'yukkyukkyu-planner';
-                const firebaseConfig = JSON.parse(__firebase_config);
-                const app = initializeApp(firebaseConfig);
+            const firebaseConfig = {
+                apiKey: "AIzaSyDVXVqEPZzYXxGzvzUjvcT_i-UzKMTOKn0",
+                authDomain: "yoonjae-33b39.firebaseapp.com",
+                projectId: "yoonjae-33b39",
+                storageBucket: "yoonjae-33b39.firebasestorage.app",
+                messagingSenderId: "541441504584",
+                appId: "1:541441504584:web:905d53f01d19d8c8576f7d"
+            };
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const rawRoom = (urlParams.get('room') || 'kyukyu_family_room').replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 40) || 'kyukyu_family_room';
+
+            const app = initializeApp(firebaseConfig);
+            const db = getFirestore(app);
+
+            // 익명 인증이 켜져 있는 경우 로그인 시도 (미활성화 상태여도 Firestore 공개 규칙이면 계속 동작)
+            try {
                 const auth = getAuth(app);
-                const db = getFirestore(app);
+                await signInAnonymously(auth);
+            } catch (authErr) {
+                console.warn('Anonymous auth skipped:', authErr);
+            }
 
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
+            const plannerDocRef = doc(db, 'family_planner', rawRoom);
+            let isApplyingRemote = false;
 
-                const plannerDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'family_planner', 'main_state');
-
-                window.__savePlannerCloud = async function () {
-                    try {
-                        await setDoc(plannerDocRef, {
-                            patterns: appState.patterns,
-                            records: appState.records,
-                            notes: appState.notes,
-                            bonusStars: appState.bonusStars,
-                            vocabList: appState.vocabList,
-                            vocabStars: appState.vocabStars,
-                            hanjaList: appState.hanjaList,
-                            hanjaStars: appState.hanjaStars,
-                            familyPin: appState.familyPin || '',
-                            updatedAt: Date.now()
-                        });
-                    } catch (e) {
-                        console.error('Save failed:', e);
+            window.__savePlannerCloud = async function () {
+                if (isApplyingRemote || !appState) return;
+                try {
+                    await setDoc(plannerDocRef, {
+                        patterns: appState.patterns,
+                        records: appState.records,
+                        notes: appState.notes,
+                        bonusStars: appState.bonusStars,
+                        vocabList: appState.vocabList,
+                        vocabStars: appState.vocabStars,
+                        hanjaList: appState.hanjaList,
+                        hanjaStars: appState.hanjaStars,
+                        updatedAt: Date.now()
+                    }, { merge: true });
+                } catch (e) {
+                    console.error('Save failed:', e);
+                    if (badge) {
+                        badge.textContent = '저장 권한 확인 필요';
+                        badge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-rose-950 text-rose-300 border border-rose-700 font-bold';
                     }
-                };
+                }
+            };
 
-                onSnapshot(plannerDocRef, (snap) => {
-                    if (snap.exists()) {
-                        const data = snap.data();
+            onSnapshot(plannerDocRef, (snap) => {
+                if (snap.exists() && appState) {
+                    const data = snap.data();
+                    isApplyingRemote = true;
+                    try {
                         if (Array.isArray(data.patterns)) appState.patterns = data.patterns;
                         if (data.records && typeof data.records === 'object') appState.records = data.records;
                         if (data.notes && typeof data.notes === 'object') appState.notes = data.notes;
@@ -2356,25 +2410,31 @@
                         if (typeof window.__refreshPlannerUI === 'function') {
                             window.__refreshPlannerUI();
                         }
+                    } finally {
+                        isApplyingRemote = false;
                     }
-                    if (badge) {
-                        badge.textContent = '실시간 동기화';
-                        badge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-blue-950 text-blue-300 border border-blue-700 font-bold';
-                    }
-                }, (err) => {
-                    console.error('Sync error:', err);
-                    if (badge) {
-                        badge.textContent = '단독 실행 모드';
-                        badge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-slate-950 text-blue-300 border border-blue-800 font-bold';
-                    }
-                });
-            }
+                } else if (!snap.exists() && appState) {
+                    // 첫 접속 시 기본 데이터를 클라우드에 초기화
+                    window.__savePlannerCloud();
+                }
+
+                if (badge) {
+                    badge.textContent = '실시간 연동 중';
+                    badge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-blue-950 text-blue-300 border border-blue-700 font-bold';
+                }
+            }, (err) => {
+                console.error('Sync error:', err);
+                if (badge) {
+                    badge.textContent = '연동 오류 (규칙 확인)';
+                    badge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-rose-950 text-rose-300 border border-rose-700 font-bold';
+                }
+            });
         } catch (e) {
             console.warn('Cloud module skipped:', e);
             const badge = document.getElementById('sync-badge');
             if (badge) {
-                badge.textContent = '단독 실행 모드';
-                badge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-slate-950 text-blue-300 border border-blue-800 font-bold';
+                badge.textContent = '연동 실패';
+                badge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-rose-950 text-rose-300 border border-rose-700 font-bold';
             }
         }
     </script>
