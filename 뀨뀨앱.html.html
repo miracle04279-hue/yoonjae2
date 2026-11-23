@@ -1,0 +1,2005 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0B1120">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="뀨뀨 미션">
+    <title>뀨뀨 매일 미션 플래너</title>
+
+    <!-- Tailwind CSS 로드 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts: Jua & Noto Sans KR -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Noto Sans KR"', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+                        kid: ['"Jua"', 'sans-serif'],
+                    },
+                    colors: {
+                        kor: { light: '#FEF2F2', main: '#EF4444', dark: '#B91C1C', border: '#FECACA' },
+                        eng: { light: '#EFF6FF', main: '#3B82F6', dark: '#1D4ED8', border: '#BFDBFE' },
+                        math: { light: '#FEFCE8', main: '#EAB308', dark: '#A16207', border: '#FEF08A' },
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* 기본 배경 및 모바일 터치 최적화 */
+        body {
+            background-color: #0B1120;
+            color: #F8FAFC;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .tab-active {
+            border-bottom: 3px solid #3B82F6;
+            color: #60A5FA;
+            font-weight: 700;
+        }
+        .check-bounce {
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .check-bounce:active {
+            transform: scale(0.9);
+        }
+        /* 축하 파티클 애니메이션 */
+        .confetti-piece {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            border-radius: 3px;
+            pointer-events: none;
+            z-index: 9999;
+            animation: confetti-fall 1.2s ease-out forwards;
+        }
+        @keyframes confetti-fall {
+            0% { transform: translate(0, 0) rotate(0deg) scale(1); opacity: 1; }
+            100% { transform: translate(var(--tx), var(--ty)) rotate(720deg) scale(0.5); opacity: 0; }
+        }
+        /* 인천 유나이티드 스타일 타원형 워터마크 엠블럼 */
+        .iufc-bg-emblem {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .iufc-bg-emblem svg {
+            width: min(82vw, 600px);
+            height: min(94vw, 680px);
+            opacity: 0.28;
+            transform: rotate(-3deg);
+            filter: drop-shadow(0 0 18px rgba(234, 179, 8, 0.14));
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 antialiased min-h-screen flex flex-col relative">
+
+    <!-- 배경 인천 유나이티드 타원형 스트라이프 엠블럼 -->
+    <div class="iufc-bg-emblem" aria-hidden="true">
+        <svg viewBox="0 0 220 280" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <clipPath id="iufcOvalClip">
+                    <ellipse cx="110" cy="140" rx="92" ry="124" />
+                </clipPath>
+            </defs>
+            <g clip-path="url(#iufcOvalClip)">
+                <!-- 파랑·검정 세로 스트라이프 -->
+                <rect x="14" y="10" width="24" height="260" fill="#2563EB" />
+                <rect x="38" y="10" width="24" height="260" fill="#0B1120" />
+                <rect x="62" y="10" width="24" height="260" fill="#2563EB" />
+                <rect x="86" y="10" width="24" height="260" fill="#0B1120" />
+                <rect x="110" y="10" width="24" height="260" fill="#2563EB" />
+                <rect x="134" y="10" width="24" height="260" fill="#0B1120" />
+                <rect x="158" y="10" width="24" height="260" fill="#2563EB" />
+                <rect x="182" y="10" width="26" height="260" fill="#0B1120" />
+
+                <!-- 상단 IUFC 텍스트 -->
+                <text x="110" y="76" text-anchor="middle" fill="#EAB308" font-family="'Noto Sans KR', sans-serif" font-size="30" font-weight="900" letter-spacing="2">IUFC</text>
+
+                <!-- 중앙 날개 + 닻 + 키(타륜) 문장 -->
+                <g stroke="#EAB308" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M92 142 C72 122, 50 105, 36 86 C42 104, 48 114, 56 122 C42 118, 32 112, 24 104 C34 122, 46 132, 58 138 C44 138, 34 135, 26 130 C38 144, 52 150, 68 152 C56 155, 46 155, 38 153 C52 162, 68 164, 84 162" fill="#EAB308" fill-opacity="0.75" stroke-width="2.2" />
+                    <path d="M128 142 C148 122, 170 105, 184 86 C178 104, 172 114, 164 122 C178 118, 188 112, 196 104 C186 122, 174 132, 162 138 C176 138, 186 135, 194 130 C182 144, 168 150, 152 152 C164 155, 174 155, 182 153 C168 162, 152 164, 136 162" fill="#EAB308" fill-opacity="0.75" stroke-width="2.2" />
+
+                    <circle cx="110" cy="105" r="6" stroke-width="4" fill="none" />
+                    <line x1="94" y1="115" x2="126" y2="115" stroke-width="4.5" />
+                    <line x1="110" y1="111" x2="110" y2="162" stroke-width="5" />
+                    <path d="M84 143 C86 158, 97 166, 110 166 C123 166, 134 158, 136 143" stroke-width="5" fill="none" />
+                    <path d="M81 146 L85 140 L90 146" stroke-width="3.5" fill="none" />
+                    <path d="M130 146 L135 140 L139 146" stroke-width="3.5" fill="none" />
+
+                    <circle cx="110" cy="176" r="14" stroke-width="3.5" fill="none" />
+                    <circle cx="110" cy="176" r="4.5" stroke-width="2.5" fill="#EAB308" />
+                    <line x1="110" y1="154" x2="110" y2="198" stroke-width="3" />
+                    <line x1="88" y1="176" x2="132" y2="176" stroke-width="3" />
+                    <line x1="94" y1="160" x2="126" y2="192" stroke-width="2.8" />
+                    <line x1="126" y1="160" x2="94" y2="192" stroke-width="2.8" />
+                </g>
+
+                <!-- 하단 2003 텍스트 -->
+                <text x="110" y="226" text-anchor="middle" fill="#EAB308" font-family="'Noto Sans KR', sans-serif" font-size="22" font-weight="900" letter-spacing="1.5">2003</text>
+            </g>
+
+            <!-- 노란색 타원형 테두리 -->
+            <ellipse cx="110" cy="140" rx="92" ry="124" stroke="#EAB308" stroke-width="7.5" fill="none" />
+        </svg>
+    </div>
+
+    <!-- 상단 헤더 & 가족 사용자 전환 -->
+    <header class="bg-slate-900/95 backdrop-blur border-b border-blue-900/60 shadow-lg sticky top-0 z-20">
+        <div class="max-w-3xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-2">
+            <!-- 앱 타이틀 및 동기화 상태 배지 -->
+            <div class="flex items-center gap-2.5">
+                <div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-slate-900 border border-blue-400/40 rounded-2xl flex items-center justify-center text-white shadow-md shrink-0">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.59 14.37a6 6 0 01-5.84 7.38v-4.8m5.84-2.58a14.98 14.98 0 006.16-12.12A14.98 14.98 0 009.631 8.41m5.96 5.96a14.926 14.926 0 01-5.841 2.58m-.119-8.54a6 6 0 00-7.381 5.84h4.8m2.581-5.84a14.927 14.927 0 00-2.58 5.84m2.699 2.7c-.103.021-.207.041-.311.06a15.09 15.09 0 01-2.448-2.448 14.9 14.9 0 01.06-.312m-2.24 2.39a4.493 4.493 0 00-1.757 4.306 4.493 4.493 0 004.306-1.758M16.5 9a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
+                    </svg>
+                </div>
+                <div>
+                    <div class="flex items-center gap-1.5">
+                        <h1 class="font-kid text-xl sm:text-2xl text-white tracking-wide">뀨뀨 매일 미션!</h1>
+                        <span id="sync-badge" class="text-[10px] px-2 py-0.5 rounded-full bg-blue-950 text-blue-300 border border-blue-700/60 font-bold">연결 중...</span>
+                    </div>
+                    <p class="text-xs text-blue-300/80 hidden sm:block">인천 유나이티드처럼 끝까지 포기하지 않아요! 🔵⚫</p>
+                </div>
+            </div>
+
+            <!-- 가족 구성원 전환 (뀨뀨 / 뀽이 / 뚱이) -->
+            <div class="flex items-center bg-slate-950 p-1 rounded-xl border border-blue-900/70">
+                <button type="button" onclick="window.switchUser('kid')" id="btn-user-kid" class="user-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-bold flex items-center gap-1.5 transition-all bg-blue-600 text-white shadow-sm">
+                    <span class="relative w-6 h-6 rounded-full overflow-hidden border border-blue-300 shrink-0 inline-flex items-center justify-center bg-slate-900">
+                        <img src="8645.jpg" alt="뀨뀨" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                        <span style="display:none;" class="text-sm leading-none">👦</span>
+                    </span>
+                    <span>뀨뀨</span>
+                </button>
+                <button type="button" onclick="window.switchUser('mom')" id="btn-user-mom" class="user-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium flex items-center gap-1 text-slate-300 hover:text-white transition-all">
+                    <span>👩</span> 뀽이
+                </button>
+                <button type="button" onclick="window.switchUser('dad')" id="btn-user-dad" class="user-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium flex items-center gap-1 text-slate-300 hover:text-white transition-all">
+                    <span>👨</span> 뚱이
+                </button>
+            </div>
+        </div>
+
+        <!-- 메인 내비게이션 탭 (6개 탭) -->
+        <nav class="max-w-3xl mx-auto px-2 sm:px-4 flex overflow-x-auto no-scrollbar border-t border-slate-800 bg-slate-900">
+            <button type="button" onclick="window.switchTab('today')" id="tab-today" class="px-3 sm:px-2 sm:flex-1 py-3 text-center text-xs sm:text-base tab-active flex items-center justify-center gap-1 whitespace-nowrap shrink-0">
+                <svg class="w-4 h-4 sm:w-5 sm:h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span>오늘의 할 일</span>
+            </button>
+            <button type="button" onclick="window.switchTab('vocab')" id="tab-vocab" class="px-3 sm:px-2 sm:flex-1 py-3 text-center text-xs sm:text-base text-slate-400 hover:text-white flex items-center justify-center gap-1 whitespace-nowrap shrink-0">
+                <span class="text-sm sm:text-base leading-none shrink-0">🔤</span>
+                <span>영단어 시험</span>
+            </button>
+            <button type="button" onclick="window.switchTab('hanja')" id="tab-hanja" class="px-3 sm:px-2 sm:flex-1 py-3 text-center text-xs sm:text-base text-slate-400 hover:text-white flex items-center justify-center gap-1 whitespace-nowrap shrink-0">
+                <span class="text-sm sm:text-base leading-none shrink-0">🀄</span>
+                <span>한자 시험</span>
+            </button>
+            <button type="button" onclick="window.switchTab('timer')" id="tab-timer" class="px-3 sm:px-2 sm:flex-1 py-3 text-center text-xs sm:text-base text-slate-400 hover:text-white flex items-center justify-center gap-1 whitespace-nowrap shrink-0">
+                <span class="text-sm sm:text-base leading-none shrink-0">⏱️</span>
+                <span>시간 재기</span>
+            </button>
+            <button type="button" onclick="window.switchTab('history')" id="tab-history" class="px-3 sm:px-2 sm:flex-1 py-3 text-center text-xs sm:text-base text-slate-400 hover:text-white flex items-center justify-center gap-1 whitespace-nowrap shrink-0">
+                <svg class="w-4 h-4 sm:w-5 sm:h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"/></svg>
+                <span>칭찬 스티커판</span>
+            </button>
+            <button type="button" onclick="window.switchTab('pattern')" id="tab-pattern" class="px-3 sm:px-2 sm:flex-1 py-3 text-center text-xs sm:text-base text-slate-400 hover:text-white flex items-center justify-center gap-1 whitespace-nowrap shrink-0">
+                <svg class="w-4 h-4 sm:w-5 sm:h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/></svg>
+                <span>패턴 설정</span>
+            </button>
+        </nav>
+    </header>
+
+    <!-- 메인 콘텐츠 영역 -->
+    <main class="flex-1 max-w-3xl w-full mx-auto px-4 py-5 relative z-10">
+
+        <!-- ========================================== -->
+        <!-- 탭 1: 오늘의 할 일                           -->
+        <!-- ========================================== -->
+        <section id="view-today" class="space-y-5">
+            <!-- 날짜 이동 및 달성률 대시보드 -->
+            <div class="bg-gradient-to-r from-blue-700 via-blue-800 to-slate-950 border border-blue-500/40 rounded-3xl p-5 text-white shadow-xl">
+                <div class="flex items-center justify-between mb-4">
+                    <button type="button" onclick="window.changeDate(-1)" class="p-2.5 bg-black/35 hover:bg-black/50 active:bg-black/60 border border-blue-400/20 rounded-xl transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"/></svg>
+                    </button>
+                    <div class="text-center">
+                        <span id="display-date-badge" class="inline-block px-3 py-0.5 bg-blue-400 text-slate-950 rounded-full text-xs font-extrabold mb-1">오늘</span>
+                        <h2 id="display-date-text" class="font-kid text-xl sm:text-3xl tracking-wide">2026년 11월 23일 (월)</h2>
+                    </div>
+                    <button type="button" onclick="window.changeDate(1)" class="p-2.5 bg-black/35 hover:bg-black/50 active:bg-black/60 border border-blue-400/20 rounded-xl transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
+                    </button>
+                </div>
+
+                <!-- 진행률 바 -->
+                <div class="bg-black/45 border border-blue-400/20 rounded-2xl p-4 backdrop-blur-sm">
+                    <div class="flex justify-between items-end mb-2">
+                        <div>
+                            <p class="text-xs text-blue-200">오늘의 미션 달성률</p>
+                            <p id="encouragement-msg" class="font-kid text-base sm:text-xl text-blue-300">할 수 있다! 파이팅! 💪</p>
+                        </div>
+                        <div class="text-right">
+                            <span id="progress-text" class="font-kid text-2xl sm:text-3xl text-white">0 / 0</span>
+                            <span class="text-xs text-blue-200 block">완료함</span>
+                        </div>
+                    </div>
+                    <div class="w-full bg-slate-900 rounded-full h-4 overflow-hidden p-0.5 border border-blue-800/60">
+                        <div id="progress-bar" class="bg-gradient-to-r from-blue-400 to-sky-300 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 카테고리 필터 칩 -->
+            <div class="flex gap-2 overflow-x-auto pb-1">
+                <button type="button" onclick="window.filterCategory('ALL')" id="filter-ALL" class="filter-chip px-4 py-2 rounded-2xl text-xs sm:text-sm font-bold bg-blue-600 text-white shadow-sm transition shrink-0">
+                    전체 보기
+                </button>
+                <button type="button" onclick="window.filterCategory('KOR')" id="filter-KOR" class="filter-chip px-4 py-2 rounded-2xl text-xs sm:text-sm font-bold bg-slate-900 text-blue-200 border border-blue-800/70 hover:bg-slate-800 transition flex items-center gap-1.5 shrink-0">
+                    <span>📕</span> 국어
+                </button>
+                <button type="button" onclick="window.filterCategory('ENG')" id="filter-ENG" class="filter-chip px-4 py-2 rounded-2xl text-xs sm:text-sm font-bold bg-slate-900 text-blue-200 border border-blue-800/70 hover:bg-slate-800 transition flex items-center gap-1.5 shrink-0">
+                    <span>📘</span> 영어
+                </button>
+                <button type="button" onclick="window.filterCategory('MATH')" id="filter-MATH" class="filter-chip px-4 py-2 rounded-2xl text-xs sm:text-sm font-bold bg-slate-900 text-blue-200 border border-blue-800/70 hover:bg-slate-800 transition flex items-center gap-1.5 shrink-0">
+                    <span>📙</span> 수학
+                </button>
+            </div>
+
+            <!-- 할 일 목록 컨테이너 -->
+            <div id="task-list-container" class="space-y-3.5">
+                <!-- 동적 렌더링 -->
+            </div>
+
+            <!-- 뀽이·뚱이의 칭찬 한마디 영역 -->
+            <div class="bg-slate-900 rounded-3xl p-5 border border-blue-900/70 shadow-sm space-y-4">
+                <div class="flex items-center justify-between">
+                    <h3 class="font-bold text-white flex items-center gap-2 text-sm sm:text-base">
+                        <span>💌</span> 뀽이·뚱이의 칭찬 한마디
+                    </h3>
+                    <span class="text-xs text-blue-300/70">오늘의 기록</span>
+                </div>
+
+                <div id="parent-notes-list" class="space-y-2"></div>
+
+                <div class="flex gap-2 pt-1">
+                    <input type="text" id="parent-note-input" placeholder="뀨뀨에게 응원 메시지를 남겨주세요..."
+                        class="flex-1 bg-slate-950 text-white placeholder-slate-500 border border-blue-900/80 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-blue-500">
+                    <button type="button" onclick="window.addParentNote()" class="bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-bold px-4 py-2.5 rounded-xl text-sm transition shrink-0">
+                        남기기
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- 탭 2: 영단어 단어장 & 퀴즈 시험                 -->
+        <!-- ========================================== -->
+        <section id="view-vocab" class="hidden space-y-5">
+            <div class="bg-gradient-to-r from-blue-700 via-blue-800 to-slate-950 border border-blue-500/40 rounded-3xl p-5 text-white shadow-lg flex flex-wrap items-center justify-between gap-3">
+                <div>
+                    <span class="inline-block px-2.5 py-0.5 bg-blue-400 text-slate-950 rounded-full text-xs font-extrabold mb-1">ENGLISH QUIZ</span>
+                    <h2 class="font-kid text-2xl sm:text-3xl">뀨뀨 영단어 챌린지</h2>
+                    <p class="text-xs sm:text-sm text-blue-200 mt-0.5">소리를 잘 듣고 알맞은 뜻을 골라보세요! 🔊</p>
+                </div>
+                <div class="flex bg-black/45 border border-blue-400/20 p-1 rounded-2xl">
+                    <button type="button" onclick="window.setVocabMode('quiz')" id="vocab-mode-quiz" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold bg-blue-500 text-white shadow-sm transition">
+                        📝 시험 보기
+                    </button>
+                    <button type="button" onclick="window.setVocabMode('manage')" id="vocab-mode-manage" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold text-blue-200 hover:text-white transition">
+                        ⚙️ 단어 등록/발음
+                    </button>
+                </div>
+            </div>
+
+            <!-- [모드 1] 뀨뀨 영단어 퀴즈 화면 -->
+            <div id="vocab-quiz-panel" class="space-y-4">
+                <!-- 동적 렌더링 -->
+            </div>
+
+            <!-- [모드 2] 뀽이·뚱이 단어 등록 및 발음 듣기 화면 -->
+            <div id="vocab-manage-panel" class="hidden space-y-5">
+                <div id="vocab-parent-lock-banner" class="hidden bg-slate-900 border-2 border-blue-700/70 rounded-3xl p-5 text-center space-y-2">
+                    <p class="text-2xl">🔒</p>
+                    <h3 class="font-bold text-white text-base">영단어 등록과 삭제는 뀽이·뚱이만 할 수 있어요!</h3>
+                    <p class="text-xs sm:text-sm text-blue-200/80">위쪽에서 <strong>뀽이</strong> 또는 <strong>뚱이</strong>를 선택하면 새 단어를 등록할 수 있어요. (발음 듣기는 누구나 가능!)</p>
+                </div>
+
+                <div id="vocab-add-form-card" class="bg-slate-900 rounded-3xl p-5 border border-blue-900/70 shadow-sm space-y-4">
+                    <h3 class="font-bold text-white text-base sm:text-lg flex items-center gap-2 border-b border-slate-800 pb-3">
+                        <span>➕</span> 새 영단어 등록하기
+                    </h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-blue-200/80 mb-1">영어 단어 (또는 짧은 표현)</label>
+                            <input type="text" id="vocab-word-input" placeholder="예: apple, elephant"
+                                class="w-full bg-slate-950 text-white placeholder-slate-500 border border-blue-900/80 rounded-xl px-4 py-3 text-sm font-bold focus:outline-none focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-blue-200/80 mb-1">우리말 뜻</label>
+                            <input type="text" id="vocab-meaning-input" placeholder="예: 사과, 코끼리"
+                                class="w-full bg-slate-950 text-white placeholder-slate-500 border border-blue-900/80 rounded-xl px-4 py-3 text-sm font-bold focus:outline-none focus:border-blue-500">
+                        </div>
+                    </div>
+                    <button type="button" onclick="window.addVocabWord()" class="w-full bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-bold py-3.5 rounded-2xl shadow-md transition">
+                        단어장에 추가하기
+                    </button>
+                </div>
+
+                <div class="space-y-2.5">
+                    <div class="flex items-center justify-between px-1">
+                        <h3 class="font-bold text-white text-base">등록된 영단어 목록 (<span id="vocab-count-label">0</span>개)</h3>
+                        <span class="text-xs text-blue-300/70">스피커를 눌러 발음 확인</span>
+                    </div>
+                    <div id="vocab-list-container" class="space-y-2.5"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- 탭 3: 한자 단어장 & 퀴즈 시험 (소리 재생 없음) -->
+        <!-- ========================================== -->
+        <section id="view-hanja" class="hidden space-y-5">
+            <div class="bg-gradient-to-r from-blue-800 via-slate-900 to-black border border-blue-500/40 rounded-3xl p-5 text-white shadow-lg flex flex-wrap items-center justify-between gap-3">
+                <div>
+                    <span class="inline-block px-2.5 py-0.5 bg-blue-400 text-slate-950 rounded-full text-xs font-extrabold mb-1">HANJA QUIZ</span>
+                    <h2 class="font-kid text-2xl sm:text-3xl">뀨뀨 한자 & 뜻 챌린지</h2>
+                    <p class="text-xs sm:text-sm text-blue-200 mt-0.5">한자를 보고 알맞은 뜻과 음을 골라보세요! 🀄</p>
+                </div>
+                <div class="flex bg-black/45 border border-blue-400/20 p-1 rounded-2xl">
+                    <button type="button" onclick="window.setHanjaMode('quiz')" id="hanja-mode-quiz" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold bg-blue-500 text-white shadow-sm transition">
+                        📝 시험 보기
+                    </button>
+                    <button type="button" onclick="window.setHanjaMode('manage')" id="hanja-mode-manage" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold text-blue-200 hover:text-white transition">
+                        ⚙️ 한자 등록
+                    </button>
+                </div>
+            </div>
+
+            <!-- [모드 1] 뀨뀨 한자 퀴즈 화면 -->
+            <div id="hanja-quiz-panel" class="space-y-4">
+                <!-- 동적 렌더링 -->
+            </div>
+
+            <!-- [모드 2] 뀽이·뚱이 한자 등록 화면 -->
+            <div id="hanja-manage-panel" class="hidden space-y-5">
+                <div id="hanja-parent-lock-banner" class="hidden bg-slate-900 border-2 border-blue-700/70 rounded-3xl p-5 text-center space-y-2">
+                    <p class="text-2xl">🔒</p>
+                    <h3 class="font-bold text-white text-base">한자 등록과 삭제는 뀽이·뚱이만 할 수 있어요!</h3>
+                    <p class="text-xs sm:text-sm text-blue-200/80">위쪽에서 <strong>뀽이</strong> 또는 <strong>뚱이</strong>를 선택하면 새 한자를 등록하고 관리할 수 있어요.</p>
+                </div>
+
+                <div id="hanja-add-form-card" class="bg-slate-900 rounded-3xl p-5 border border-blue-900/70 shadow-sm space-y-4">
+                    <h3 class="font-bold text-white text-base sm:text-lg flex items-center gap-2 border-b border-slate-800 pb-3">
+                        <span>➕</span> 새 한자 등록하기
+                    </h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-blue-200/80 mb-1">한자 (글자)</label>
+                            <input type="text" id="hanja-char-input" placeholder="예: 山, 大, 學"
+                                class="w-full bg-slate-950 text-white placeholder-slate-500 border border-blue-900/80 rounded-xl px-4 py-3 text-sm font-bold focus:outline-none focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-blue-200/80 mb-1">뜻과 음</label>
+                            <input type="text" id="hanja-meaning-input" placeholder="예: 메 산, 큰 대, 배울 학"
+                                class="w-full bg-slate-950 text-white placeholder-slate-500 border border-blue-900/80 rounded-xl px-4 py-3 text-sm font-bold focus:outline-none focus:border-blue-500">
+                        </div>
+                    </div>
+                    <button type="button" onclick="window.addHanjaWord()" class="w-full bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-bold py-3.5 rounded-2xl shadow-md transition">
+                        한자장에 추가하기
+                    </button>
+                </div>
+
+                <div class="space-y-2.5">
+                    <div class="flex items-center justify-between px-1">
+                        <h3 class="font-bold text-white text-base">등록된 한자 목록 (<span id="hanja-count-label">0</span>개)</h3>
+                        <span class="text-xs text-blue-300/70">한자와 뜻·음 확인</span>
+                    </div>
+                    <div id="hanja-list-container" class="space-y-2.5"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- 탭 4: 시간 재기 (스톱워치 & 카운트다운 타이머)     -->
+        <!-- ========================================== -->
+        <section id="view-timer" class="hidden space-y-5">
+            <div class="bg-gradient-to-r from-blue-700 via-blue-900 to-slate-950 border border-blue-500/40 rounded-3xl p-5 text-white shadow-lg flex flex-wrap items-center justify-between gap-3">
+                <div>
+                    <span class="inline-block px-2.5 py-0.5 bg-blue-400 text-slate-950 rounded-full text-xs font-extrabold mb-1">FOCUS TIMER</span>
+                    <h2 class="font-kid text-2xl sm:text-3xl">뀨뀨 집중 시간 재기</h2>
+                    <p class="text-xs sm:text-sm text-blue-200 mt-0.5">독서, 연산, 발음 연습 시간을 잴 수 있어요! ⏱️</p>
+                </div>
+                <div class="flex bg-black/45 border border-blue-400/20 p-1 rounded-2xl">
+                    <button type="button" onclick="window.setTimerMode('countdown')" id="timer-mode-countdown" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold bg-blue-500 text-white shadow-sm transition">
+                        ⏳ 타이머
+                    </button>
+                    <button type="button" onclick="window.setTimerMode('stopwatch')" id="timer-mode-stopwatch" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold text-blue-200 hover:text-white transition">
+                        ⏱️ 스톱워치
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-slate-900 rounded-3xl p-6 border border-blue-900/70 shadow-sm text-center space-y-5">
+                <!-- 과목 태그 선택 -->
+                <div class="flex flex-wrap items-center justify-center gap-2">
+                    <button type="button" onclick="window.selectTimerSubject('KOR')" id="timer-sub-KOR" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-blue-600 text-white border-2 border-blue-400 transition">
+                        📕 국어
+                    </button>
+                    <button type="button" onclick="window.selectTimerSubject('ENG')" id="timer-sub-ENG" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-950 text-slate-300 border border-slate-700 transition">
+                        📘 영어
+                    </button>
+                    <button type="button" onclick="window.selectTimerSubject('MATH')" id="timer-sub-MATH" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-950 text-slate-300 border border-slate-700 transition">
+                        📙 수학
+                    </button>
+                </div>
+
+                <!-- 타이머 프리셋 버튼 -->
+                <div id="timer-presets-box" class="space-y-2.5">
+                    <p class="text-[11px] text-blue-300/70 font-medium">누를 때마다 시간이 더해져요! (예: 10초 두 번 → 20초)</p>
+                    <div class="flex flex-wrap items-center justify-center gap-2">
+                        <button type="button" onclick="window.addCountdownDuration(0, 10)" class="px-3 py-2 rounded-2xl bg-blue-950 hover:bg-blue-900 border border-blue-700/60 text-blue-200 text-xs sm:text-sm font-bold transition">+10초</button>
+                        <button type="button" onclick="window.addCountdownDuration(0, 30)" class="px-3 py-2 rounded-2xl bg-blue-950 hover:bg-blue-900 border border-blue-700/60 text-blue-200 text-xs sm:text-sm font-bold transition">+30초</button>
+                        <button type="button" onclick="window.addCountdownDuration(1, 0)" class="px-3 py-2 rounded-2xl bg-slate-950 hover:bg-blue-950 border border-slate-700 hover:border-blue-600 text-slate-200 text-xs sm:text-sm font-bold transition">+1분</button>
+                        <button type="button" onclick="window.addCountdownDuration(5, 0)" class="px-3.5 py-2 rounded-2xl bg-slate-950 hover:bg-blue-950 border border-slate-700 hover:border-blue-600 text-slate-200 text-xs sm:text-sm font-bold transition">+5분</button>
+                        <button type="button" onclick="window.addCountdownDuration(10, 0)" class="px-3.5 py-2 rounded-2xl bg-slate-950 hover:bg-blue-950 border border-slate-700 hover:border-blue-600 text-slate-200 text-xs sm:text-sm font-bold transition">+10분</button>
+                        <button type="button" onclick="window.addCountdownDuration(15, 0)" class="px-3.5 py-2 rounded-2xl bg-slate-950 hover:bg-blue-950 border border-slate-700 hover:border-blue-600 text-slate-200 text-xs sm:text-sm font-bold transition">+15분</button>
+                        <button type="button" onclick="window.addCountdownDuration(20, 0)" class="px-3.5 py-2 rounded-2xl bg-slate-950 hover:bg-blue-950 border border-slate-700 hover:border-blue-600 text-slate-200 text-xs sm:text-sm font-bold transition">+20분</button>
+                    </div>
+                    <div class="flex flex-wrap items-center justify-center gap-2 text-xs text-slate-300">
+                        <span>직접 입력:</span>
+                        <input type="number" id="timer-custom-minutes" min="0" max="120" value="10"
+                            class="w-16 bg-slate-950 border border-blue-900/80 rounded-xl px-2.5 py-1.5 text-center text-sm font-bold text-white focus:outline-none focus:border-blue-500">
+                        <span>분</span>
+                        <input type="number" id="timer-custom-seconds" min="0" max="59" value="0"
+                            class="w-16 bg-slate-950 border border-blue-900/80 rounded-xl px-2.5 py-1.5 text-center text-sm font-bold text-white focus:outline-none focus:border-blue-500">
+                        <span>초</span>
+                        <button type="button" onclick="window.applyCustomCountdown()" class="px-3 py-1.5 rounded-xl bg-blue-950 text-blue-300 hover:bg-blue-900 border border-blue-700/60 font-bold transition">
+                            적용
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 대형 시간 표시 -->
+                <div class="bg-slate-950 border-2 border-blue-800/70 rounded-3xl py-7 px-4">
+                    <p id="timer-status-label" class="text-xs font-bold text-blue-400 mb-1">집중 타이머 준비됨</p>
+                    <div id="timer-display" class="font-kid text-6xl sm:text-7xl text-white tracking-wider tabular-nums">10:00</div>
+                </div>
+
+                <!-- 시작 / 일시정지 / 초기화 버튼 -->
+                <div class="flex flex-wrap items-center justify-center gap-3">
+                    <button type="button" onclick="window.toggleTimerRun()" id="timer-toggle-btn" class="px-7 py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-bold text-base shadow-md transition">
+                        ▶ 시작하기
+                    </button>
+                    <button type="button" onclick="window.resetTimer()" class="px-5 py-3.5 rounded-2xl bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-slate-200 border border-slate-700 font-bold text-base transition">
+                        ↺ 초기화
+                    </button>
+                </div>
+
+                <!-- 오늘 집중 기록 요약 -->
+                <div id="timer-log-box" class="bg-blue-950/60 border border-blue-800/70 rounded-2xl p-3.5 text-xs sm:text-sm text-blue-200 font-bold">
+                    오늘 집중한 시간: <span id="timer-today-total" class="text-white">0분 0초</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- 탭 5: 칭찬 스티커판 (뀽이·뚱이 수기 발급 전용)  -->
+        <!-- ========================================== -->
+        <section id="view-history" class="hidden space-y-6">
+            <div class="bg-slate-900 rounded-3xl p-6 border border-blue-900/70 shadow-sm text-center space-y-4">
+                <div class="w-16 h-16 bg-blue-950 border border-blue-500/40 text-blue-300 rounded-full flex items-center justify-center mx-auto shadow-inner text-3xl">
+                    ⭐
+                </div>
+                <div>
+                    <h2 class="font-kid text-2xl sm:text-3xl text-white">유뀨뀨의 황금 별 모으기</h2>
+                    <p class="text-xs sm:text-sm text-blue-200/80 mt-1">할 일을 마친 뒤 뀽이·뚱이가 직접 칭찬 스티커를 발급해 줘요! 별 20개를 모으면 소원권을 쓸 수 있어요!</p>
+                </div>
+
+                <!-- 뀨뀨 모드 잠금 안내 배너 -->
+                <div id="sticker-parent-lock-banner" class="hidden bg-slate-950 border border-blue-800/80 rounded-2xl p-3.5 text-xs sm:text-sm text-blue-200 font-bold">
+                    🔒 칭찬 스티커(별 지급·회수 및 소원권 사용)는 <strong>뀽이·뚱이</strong>만 조작할 수 있어요!
+                </div>
+
+                <div class="inline-flex items-center gap-3 bg-slate-950 border border-blue-700/70 px-6 py-3 rounded-2xl">
+                    <span class="text-2xl">⭐</span>
+                    <span class="font-kid text-3xl text-blue-400" id="total-stars-count">0개</span>
+                    <span class="text-xs text-blue-200/80 font-bold">/ 목표 20개</span>
+                </div>
+
+                <!-- 뀽이·뚱이 전용 수기 스티커 발급/회수/소원권 컨트롤 -->
+                <div id="sticker-parent-controls" class="flex flex-wrap items-center justify-center gap-2 pt-1">
+                    <button type="button" onclick="window.adjustParentSticker(1)" class="px-4 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-bold text-xs sm:text-sm shadow-sm transition">
+                        ⭐ 칭찬 별 +1 주기
+                    </button>
+                    <button type="button" onclick="window.adjustParentSticker(-1)" class="px-4 py-2.5 rounded-2xl bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-slate-200 border border-slate-700 font-bold text-xs sm:text-sm transition">
+                        별 -1 회수
+                    </button>
+                    <button type="button" onclick="window.redeemStickerReward()" class="px-4 py-2.5 rounded-2xl bg-sky-500 hover:bg-sky-400 active:bg-sky-600 text-slate-950 font-extrabold text-xs sm:text-sm shadow-sm transition">
+                        🎁 20개 소원권 사용하기
+                    </button>
+                </div>
+
+                <!-- 20칸 황금 별 스티커 그리드 -->
+                <div id="sticker-grid" class="grid grid-cols-5 gap-2.5 sm:gap-3 max-w-md mx-auto pt-4"></div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- 탭 6: 패턴 설정 (뀽이·뚱이 전용)              -->
+        <!-- ========================================== -->
+        <section id="view-pattern" class="hidden space-y-5">
+            <div class="bg-gradient-to-r from-blue-950 to-slate-900 border border-blue-700/60 rounded-3xl p-5 flex items-start gap-3.5">
+                <div class="w-11 h-11 bg-blue-600/20 border border-blue-400/40 text-blue-300 rounded-2xl flex items-center justify-center shrink-0 text-xl">
+                    ⚙️
+                </div>
+                <div>
+                    <h2 class="font-bold text-white text-base sm:text-lg">학습 패턴 규칙 관리소</h2>
+                    <p class="text-xs sm:text-sm text-blue-200/80 mt-1 leading-relaxed">
+                        국어·영어·수학별로 반복되는 패턴을 등록하면 날짜에 맞춰 <strong>'오늘의 할 일'</strong>이 자동 생성됩니다. (뀽이·뚱이 전용)
+                    </p>
+                </div>
+            </div>
+
+            <!-- 뀨뀨 모드 안내 배너 -->
+            <div id="pattern-parent-lock-banner" class="hidden bg-slate-900 border-2 border-blue-700/70 rounded-3xl p-5 text-center space-y-2.5">
+                <p class="text-2xl">🔒</p>
+                <h3 class="font-bold text-white text-base">패턴 설정은 뀽이·뚱이만 할 수 있어요!</h3>
+                <p class="text-xs sm:text-sm text-blue-200/80">위쪽에서 <strong>뀽이</strong> 또는 <strong>뚱이</strong>를 선택하면 새 패턴 추가와 삭제를 할 수 있어요.</p>
+            </div>
+
+            <!-- 새 패턴 추가 폼 -->
+            <div id="pattern-form-card" class="bg-slate-900 rounded-3xl p-5 sm:p-6 border border-blue-900/70 shadow-sm space-y-4">
+                <h3 class="font-bold text-base sm:text-lg text-white flex items-center gap-2 border-b border-slate-800 pb-3">
+                    <span>➕</span> 새 학습 패턴 추가하기
+                </h3>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-blue-200/80 mb-1.5">1. 과목 선택</label>
+                        <select id="pattern-category" class="w-full bg-slate-950 text-white border border-blue-900/80 rounded-xl px-4 py-3 text-sm font-bold focus:outline-none focus:border-blue-500">
+                            <option value="KOR">📕 국어</option>
+                            <option value="ENG">📘 영어</option>
+                            <option value="MATH">📙 수학</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-blue-200/80 mb-1.5">2. 반복 패턴</label>
+                        <select id="pattern-type" onchange="window.togglePatternOptions()" class="w-full bg-slate-950 text-white border border-blue-900/80 rounded-xl px-4 py-3 text-sm font-bold focus:outline-none focus:border-blue-500">
+                            <option value="DAILY">매일</option>
+                            <option value="WEEKDAYS">평일 (월~금)</option>
+                            <option value="WEEKLY_DAYS">특정 요일 선택</option>
+                            <option value="ALTERNATE">순환 패턴 (월·수·금)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- 특정 요일 선택 체크박스 -->
+                <div id="weekly-days-selector" class="hidden bg-slate-950 p-4 rounded-2xl border border-blue-900/70">
+                    <label class="block text-xs font-bold text-blue-200/80 mb-2">반복할 요일을 선택하세요</label>
+                    <div class="flex flex-wrap gap-2">
+                        <label class="cursor-pointer"><input type="checkbox" value="1" class="day-checkbox hidden peer"><span class="inline-block px-3.5 py-2 rounded-xl bg-slate-900 text-slate-300 border border-slate-700 text-sm font-bold peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-400 transition">월</span></label>
+                        <label class="cursor-pointer"><input type="checkbox" value="2" class="day-checkbox hidden peer"><span class="inline-block px-3.5 py-2 rounded-xl bg-slate-900 text-slate-300 border border-slate-700 text-sm font-bold peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-400 transition">화</span></label>
+                        <label class="cursor-pointer"><input type="checkbox" value="3" class="day-checkbox hidden peer"><span class="inline-block px-3.5 py-2 rounded-xl bg-slate-900 text-slate-300 border border-slate-700 text-sm font-bold peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-400 transition">수</span></label>
+                        <label class="cursor-pointer"><input type="checkbox" value="4" class="day-checkbox hidden peer"><span class="inline-block px-3.5 py-2 rounded-xl bg-slate-900 text-slate-300 border border-slate-700 text-sm font-bold peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-400 transition">목</span></label>
+                        <label class="cursor-pointer"><input type="checkbox" value="5" class="day-checkbox hidden peer"><span class="inline-block px-3.5 py-2 rounded-xl bg-slate-900 text-slate-300 border border-slate-700 text-sm font-bold peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-400 transition">금</span></label>
+                        <label class="cursor-pointer"><input type="checkbox" value="6" class="day-checkbox hidden peer"><span class="inline-block px-3.5 py-2 rounded-xl bg-slate-900 text-slate-300 border border-slate-700 text-sm font-bold peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-400 transition">토</span></label>
+                        <label class="cursor-pointer"><input type="checkbox" value="0" class="day-checkbox hidden peer"><span class="inline-block px-3.5 py-2 rounded-xl bg-slate-900 text-slate-300 border border-slate-700 text-sm font-bold peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-400 transition">일</span></label>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="sm:col-span-2">
+                        <label class="block text-xs font-bold text-blue-200/80 mb-1.5">3. 할 일 이름</label>
+                        <input type="text" id="pattern-title" placeholder="예: 연산 문제집 풀기, 영어 그림책 읽기"
+                            class="w-full bg-slate-950 text-white placeholder-slate-500 border border-blue-900/80 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-blue-200/80 mb-1.5">4. 분량 / 기준 (선택)</label>
+                        <input type="text" id="pattern-amount" placeholder="예: 2장, 15분"
+                            class="w-full bg-slate-950 text-white placeholder-slate-500 border border-blue-900/80 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500">
+                    </div>
+                </div>
+
+                <button type="button" onclick="window.addNewPattern()" class="w-full bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-bold py-3.5 rounded-2xl shadow-md transition">
+                    이 패턴 등록하기
+                </button>
+            </div>
+
+            <!-- 현재 등록된 패턴 목록 -->
+            <div class="space-y-3">
+                <div class="flex items-center justify-between px-1">
+                    <h3 class="font-bold text-white text-base sm:text-lg">등록된 학습 패턴 목록</h3>
+                    <span class="text-xs text-blue-300 bg-blue-950 border border-blue-800 px-2.5 py-1 rounded-full font-bold">가족 공유 중</span>
+                </div>
+                <div id="pattern-list-container" class="space-y-3"></div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- 커스텀 알림 토스트 -->
+    <div id="toast-box" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-blue-950/95 border border-blue-500/50 text-white px-5 py-3 rounded-2xl shadow-xl text-xs sm:text-sm font-bold flex items-center gap-2 opacity-0 pointer-events-none transition-opacity duration-300 z-50 whitespace-nowrap">
+        <span>🔵</span>
+        <span id="toast-msg">알림 메시지</span>
+    </div>
+
+    <!-- 핵심 UI 상태, 할 일/패턴/퀴즈/타이머/수기 스티커 로직 -->
+    <script>
+        (function () {
+            const LOCAL_STORAGE_KEY = 'gyugyu_mission_planner_state_v1';
+            const DEVICE_USER_KEY = 'gyugyu_mission_device_user_v1';
+
+            function loadSavedUserRole() {
+                try {
+                    const saved = localStorage.getItem(DEVICE_USER_KEY);
+                    if (saved === 'kid' || saved === 'mom' || saved === 'dad') {
+                        return saved;
+                    }
+                } catch (e) {}
+                return 'kid';
+            }
+
+            window.__plannerCore = window.__plannerCore || {
+                currentUser: loadSavedUserRole(),
+                currentTab: 'today',
+                selectedCategory: 'ALL',
+                currentDate: new Date(),
+                listeners: []
+            };
+
+            const core = window.__plannerCore;
+            let currentUser = core.currentUser;
+            let currentTab = core.currentTab;
+            let selectedCategory = core.selectedCategory;
+            let currentDate = core.currentDate;
+
+            const CATEGORY_META = {
+                KOR: {
+                    name: '국어',
+                    emoji: '📕',
+                    border: 'border-kor-border',
+                    badge: 'bg-kor-light text-kor-dark border border-kor-border'
+                },
+                ENG: {
+                    name: '영어',
+                    emoji: '📘',
+                    border: 'border-eng-border',
+                    badge: 'bg-eng-light text-eng-dark border border-eng-border'
+                },
+                MATH: {
+                    name: '수학',
+                    emoji: '📙',
+                    border: 'border-math-border',
+                    badge: 'bg-math-light text-math-dark border border-math-border'
+                }
+            };
+
+            const defaultState = {
+                patterns: [
+                    {
+                        id: 'p_kor_1',
+                        category: 'KOR',
+                        title: '독서 및 소리 내어 읽기',
+                        amount: '20분',
+                        patternType: 'DAILY',
+                        days: [0, 1, 2, 3, 4, 5, 6],
+                        patternLabel: '매일'
+                    },
+                    {
+                        id: 'p_eng_1',
+                        category: 'ENG',
+                        title: '영어 단어 발음 듣고 말하기',
+                        amount: '15분',
+                        patternType: 'WEEKDAYS',
+                        days: [1, 2, 3, 4, 5],
+                        patternLabel: '평일(월~금)'
+                    },
+                    {
+                        id: 'p_math_1',
+                        category: 'MATH',
+                        title: '초등 2학년 연산 문제 풀기',
+                        amount: '2장',
+                        patternType: 'WEEKDAYS',
+                        days: [1, 2, 3, 4, 5],
+                        patternLabel: '평일(월~금)'
+                    },
+                    {
+                        id: 'p_kor_2',
+                        category: 'KOR',
+                        title: '받아쓰기 연습 및 뜻 확인',
+                        amount: '10단어',
+                        patternType: 'WEEKLY_DAYS',
+                        days: [1, 3, 5],
+                        patternLabel: '월·수·금'
+                    },
+                    {
+                        id: 'p_math_2',
+                        category: 'MATH',
+                        title: '도형·측정 탐구 활동',
+                        amount: '1장',
+                        patternType: 'WEEKLY_DAYS',
+                        days: [2, 4],
+                        patternLabel: '화·목'
+                    }
+                ],
+                records: {},
+                notes: {},
+                // 수기 발급 칭찬 스티커(별) 총 개수: 할 일 완료로 자동 증가하지 않음
+                bonusStars: 0,
+                vocabList: [
+                    { id: 'v_1', word: 'apple', meaning: '사과' },
+                    { id: 'v_2', word: 'banana', meaning: '바나나' },
+                    { id: 'v_3', word: 'elephant', meaning: '코끼리' },
+                    { id: 'v_4', word: 'school', meaning: '학교' },
+                    { id: 'v_5', word: 'friend', meaning: '친구' }
+                ],
+                hanjaList: [
+                    { id: 'h_1', char: '山', meaning: '메 산' },
+                    { id: 'h_2', char: '川', meaning: '내 천' },
+                    { id: 'h_3', char: '大', meaning: '큰 대' },
+                    { id: 'h_4', char: '小', meaning: '작을 소' },
+                    { id: 'h_5', char: '學', meaning: '배울 학' }
+                ],
+                focusSecondsByDate: {}
+            };
+
+            function loadStoredState() {
+                try {
+                    const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
+                    if (raw) {
+                        const parsed = JSON.parse(raw);
+                        return {
+                            patterns: Array.isArray(parsed.patterns) && parsed.patterns.length ? parsed.patterns : JSON.parse(JSON.stringify(defaultState.patterns)),
+                            records: parsed.records && typeof parsed.records === 'object' ? parsed.records : {},
+                            notes: parsed.notes && typeof parsed.notes === 'object' ? parsed.notes : {},
+                            bonusStars: typeof parsed.bonusStars === 'number' ? Math.max(0, parsed.bonusStars) : 0,
+                            vocabList: Array.isArray(parsed.vocabList) && parsed.vocabList.length ? parsed.vocabList : JSON.parse(JSON.stringify(defaultState.vocabList)),
+                            hanjaList: Array.isArray(parsed.hanjaList) && parsed.hanjaList.length ? parsed.hanjaList : JSON.parse(JSON.stringify(defaultState.hanjaList)),
+                            focusSecondsByDate: parsed.focusSecondsByDate && typeof parsed.focusSecondsByDate === 'object' ? parsed.focusSecondsByDate : {}
+                        };
+                    }
+                } catch (e) {
+                    console.warn('로컬 상태 불러오기 오류:', e);
+                }
+                return JSON.parse(JSON.stringify(defaultState));
+            }
+
+            window.__plannerAppState = window.__plannerAppState || loadStoredState();
+            const appState = window.__plannerAppState;
+
+            function isParent() {
+                return currentUser === 'mom' || currentUser === 'dad';
+            }
+
+            function getParentName() {
+                if (currentUser === 'mom') return '뀽이';
+                if (currentUser === 'dad') return '뚱이';
+                return '뀨뀨';
+            }
+
+            function formatDateKey(dateObj) {
+                const y = dateObj.getFullYear();
+                const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+                const d = String(dateObj.getDate()).padStart(2, '0');
+                return `${y}-${m}-${d}`;
+            }
+
+            function formatKoreanDateHeader(dateObj) {
+                const days = ['일', '월', '화', '수', '목', '금', '토'];
+                return `${dateObj.getFullYear()}년 ${dateObj.getMonth() + 1}월 ${dateObj.getDate()}일 (${days[dateObj.getDay()]})`;
+            }
+
+            function notifyListeners(eventName, payload) {
+                if (!window.__plannerCore || !Array.isArray(window.__plannerCore.listeners)) return;
+                window.__plannerCore.listeners.forEach(function (fn) {
+                    try {
+                        fn(eventName, payload);
+                    } catch (e) {
+                        console.error('리스너 실행 오류:', e);
+                    }
+                });
+            }
+
+            window.registerPlannerListener = function (fn) {
+                if (typeof fn === 'function') {
+                    window.__plannerCore.listeners.push(fn);
+                }
+            };
+
+            function saveStateAndSync() {
+                try {
+                    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(appState));
+                } catch (e) {
+                    console.warn('로컬 저장 오류:', e);
+                }
+                if (typeof window.__syncStateToFirestore === 'function') {
+                    window.__syncStateToFirestore();
+                }
+                renderAllViews();
+            }
+
+            window.showCoreToast = function (msg) {
+                const box = document.getElementById('toast-box');
+                const msgEl = document.getElementById('toast-msg');
+                if (!box || !msgEl) return;
+                msgEl.textContent = msg;
+                box.classList.remove('opacity-0');
+                box.classList.add('opacity-100');
+                clearTimeout(window.__toastTimer);
+                window.__toastTimer = setTimeout(function () {
+                    box.classList.remove('opacity-100');
+                    box.classList.add('opacity-0');
+                }, 2400);
+            };
+
+            function triggerConfetti() {
+                const colors = ['#3B82F6', '#60A5FA', '#FACC15', '#38BDF8', '#1D4ED8'];
+                const cx = window.innerWidth / 2;
+                const cy = window.innerHeight * 0.35;
+                for (let i = 0; i < 24; i++) {
+                    const el = document.createElement('div');
+                    el.className = 'confetti-piece';
+                    const angle = (Math.PI * 2 * i) / 24 + (Math.random() - 0.5) * 0.3;
+                    const dist = 70 + Math.random() * 130;
+                    el.style.left = `${cx}px`;
+                    el.style.top = `${cy}px`;
+                    el.style.backgroundColor = colors[i % colors.length];
+                    el.style.setProperty('--tx', `${Math.cos(angle) * dist}px`);
+                    el.style.setProperty('--ty', `${Math.sin(angle) * dist + 60}px`);
+                    document.body.appendChild(el);
+                    setTimeout(() => el.remove(), 1250);
+                }
+            }
+
+            function syncUserRoleButtons() {
+                document.querySelectorAll('.user-btn').forEach(function (btn) {
+                    btn.className = 'user-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium flex items-center gap-1 text-slate-300 hover:text-white transition-all';
+                });
+                const activeBtn = document.getElementById('btn-user-' + currentUser);
+                if (activeBtn) {
+                    activeBtn.className = 'user-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-bold flex items-center gap-1 transition-all bg-blue-600 text-white shadow-sm';
+                }
+            }
+
+            // =========================================================
+            // 사용자 전환 & 탭 전환
+            // =========================================================
+            window.switchUser = function (user) {
+                core.currentUser = user;
+                currentUser = user;
+                try {
+                    localStorage.setItem(DEVICE_USER_KEY, user);
+                } catch (e) {}
+                syncUserRoleButtons();
+                const labels = { kid: '뀨뀨', mom: '뀽이', dad: '뚱이' };
+                window.showCoreToast((labels[user] || user) + ' 모드로 전환되었습니다!');
+                notifyListeners('userChanged', user);
+                renderAllViews();
+            };
+
+            window.switchTab = function (tab) {
+                core.currentTab = tab;
+                currentTab = tab;
+                const tabs = ['today', 'vocab', 'hanja', 'timer', 'history', 'pattern'];
+                tabs.forEach(function (t) {
+                    const viewEl = document.getElementById('view-' + t);
+                    const tabBtn = document.getElementById('tab-' + t);
+                    if (viewEl) {
+                        if (t === tab) viewEl.classList.remove('hidden');
+                        else viewEl.classList.add('hidden');
+                    }
+                    if (tabBtn) {
+                        if (t === tab) {
+                            tabBtn.className = 'px-3 sm:px-2 sm:flex-1 py-3 text-center text-xs sm:text-base tab-active flex items-center justify-center gap-1 whitespace-nowrap shrink-0';
+                        } else {
+                            tabBtn.className = 'px-3 sm:px-2 sm:flex-1 py-3 text-center text-xs sm:text-base text-slate-400 hover:text-white flex items-center justify-center gap-1 whitespace-nowrap shrink-0';
+                        }
+                    }
+                });
+                notifyListeners('tabChanged', tab);
+                renderAllViews();
+            };
+
+            // =========================================================
+            // 오늘의 할 일 로직 (칭찬 스티커 자동 지급 없음!)
+            // =========================================================
+            function getTasksForDate(dateObj) {
+                const dayOfWeek = dateObj.getDay();
+                const dateKey = formatDateKey(dateObj);
+                const dayRec = appState.records[dateKey] || {};
+
+                return (appState.patterns || []).filter(function (p) {
+                    if (p.patternType === 'DAILY') return true;
+                    if (p.patternType === 'WEEKDAYS') return dayOfWeek >= 1 && dayOfWeek <= 5;
+                    if (p.patternType === 'ALTERNATE') return dayOfWeek === 1 || dayOfWeek === 3 || dayOfWeek === 5;
+                    if (p.patternType === 'WEEKLY_DAYS') {
+                        return Array.isArray(p.days) && p.days.map(Number).includes(dayOfWeek);
+                    }
+                    return true;
+                }).map(function (p) {
+                    const rec = dayRec[p.id] || {};
+                    return {
+                        id: p.id,
+                        category: p.category,
+                        title: p.title,
+                        amount: p.amount || '',
+                        patternLabel: p.patternLabel || '반복',
+                        done: !!rec.done
+                    };
+                });
+            }
+
+            window.changeDate = function (delta) {
+                currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() + delta);
+                core.currentDate = currentDate;
+                renderTodayView();
+            };
+
+            window.filterCategory = function (cat) {
+                selectedCategory = cat;
+                core.selectedCategory = cat;
+                ['ALL', 'KOR', 'ENG', 'MATH'].forEach(function (c) {
+                    const btn = document.getElementById('filter-' + c);
+                    if (!btn) return;
+                    if (c === cat) {
+                        btn.className = 'filter-chip px-4 py-2 rounded-2xl text-xs sm:text-sm font-bold bg-blue-600 text-white shadow-sm transition shrink-0 flex items-center gap-1.5';
+                    } else {
+                        btn.className = 'filter-chip px-4 py-2 rounded-2xl text-xs sm:text-sm font-bold bg-slate-900 text-blue-200 border border-blue-800/70 hover:bg-slate-800 transition shrink-0 flex items-center gap-1.5';
+                    }
+                });
+                renderTodayView();
+            };
+
+            // 개별 할 일 또는 하루 할 일 완료 시 스티커는 절대 자동으로 지급하지 않음
+            window.toggleTask = function (patternId) {
+                const dateKey = formatDateKey(currentDate);
+                if (!appState.records[dateKey]) appState.records[dateKey] = {};
+                const prevDone = !!(appState.records[dateKey][patternId] && appState.records[dateKey][patternId].done);
+                const nextDone = !prevDone;
+
+                appState.records[dateKey][patternId] = {
+                    done: nextDone,
+                    updatedBy: currentUser,
+                    updatedAt: Date.now()
+                };
+
+                const allTodayTasks = getTasksForDate(currentDate);
+                const allDone = allTodayTasks.length > 0 && allTodayTasks.every(function (t) { return t.done; });
+
+                if (nextDone) {
+                    if (allDone) {
+                        triggerConfetti();
+                        window.showCoreToast('오늘 할 일 모두 완료! 뀽이·뚱이의 칭찬 스티커를 기다려요 🎉');
+                    } else {
+                        window.showCoreToast('할 일 완료! 잘했어요 👍');
+                    }
+                } else {
+                    window.showCoreToast('미션 체크가 해제되었어요.');
+                }
+
+                saveStateAndSync();
+            };
+
+            window.addParentNote = function () {
+                const input = document.getElementById('parent-note-input');
+                if (!input) return;
+                const text = input.value.trim();
+                if (!text) {
+                    window.showCoreToast('응원 메시지를 입력해 주세요!');
+                    return;
+                }
+                const dateKey = formatDateKey(currentDate);
+                if (!Array.isArray(appState.notes[dateKey])) appState.notes[dateKey] = [];
+                appState.notes[dateKey].push({
+                    id: 'n_' + Date.now(),
+                    author: currentUser,
+                    authorName: getParentName(),
+                    text: text
+                });
+                input.value = '';
+                window.showCoreToast('칭찬 한마디가 남았어요! 💌');
+                saveStateAndSync();
+            };
+
+            function renderTodayView() {
+                const badgeEl = document.getElementById('display-date-badge');
+                const dateTextEl = document.getElementById('display-date-text');
+                const todayKey = formatDateKey(new Date());
+                const selKey = formatDateKey(currentDate);
+
+                if (badgeEl) {
+                    if (selKey === todayKey) {
+                        badgeEl.textContent = '오늘';
+                        badgeEl.className = 'inline-block px-3 py-0.5 bg-blue-400 text-slate-950 rounded-full text-xs font-extrabold mb-1';
+                    } else {
+                        badgeEl.textContent = selKey > todayKey ? '예정된 날' : '지난 날';
+                        badgeEl.className = 'inline-block px-3 py-0.5 bg-slate-800 border border-blue-400/40 text-blue-200 rounded-full text-xs font-bold mb-1';
+                    }
+                }
+                if (dateTextEl) {
+                    dateTextEl.textContent = formatKoreanDateHeader(currentDate);
+                }
+
+                const tasks = getTasksForDate(currentDate);
+                const doneCount = tasks.filter(function (t) { return t.done; }).length;
+                const totalCount = tasks.length;
+                const pct = totalCount === 0 ? 0 : Math.round((doneCount / totalCount) * 100);
+
+                const progText = document.getElementById('progress-text');
+                const progBar = document.getElementById('progress-bar');
+                const encMsg = document.getElementById('encouragement-msg');
+
+                if (progText) progText.textContent = `${doneCount} / ${totalCount}`;
+                if (progBar) progBar.style.width = `${pct}%`;
+                if (encMsg) {
+                    if (totalCount === 0) encMsg.textContent = '등록된 할 일이 없어요 😊';
+                    else if (pct === 100) encMsg.textContent = '오늘 미션 완벽 클리어! 칭찬 스티커를 기다려요! 🏆';
+                    else if (pct >= 50) encMsg.textContent = '절반 넘게 해냈어요! 조금만 더 힘내요! ⚽';
+                    else encMsg.textContent = '할 수 있다! 파이팅! 💪';
+                }
+
+                const filteredTasks = selectedCategory === 'ALL'
+                    ? tasks
+                    : tasks.filter(function (t) { return t.category === selectedCategory; });
+
+                const listContainer = document.getElementById('task-list-container');
+                if (listContainer) {
+                    if (filteredTasks.length === 0) {
+                        listContainer.innerHTML = `
+                            <div class="bg-slate-900/90 border border-blue-900/70 rounded-3xl p-7 text-center space-y-2">
+                                <p class="text-3xl">📋</p>
+                                <p class="text-sm font-bold text-slate-200">이 날짜/과목에 해당하는 할 일이 없어요.</p>
+                                <p class="text-xs text-slate-400">뀽이·뚱이 모드에서 '패턴 설정' 탭을 통해 반복 할 일을 추가할 수 있어요.</p>
+                            </div>
+                        `;
+                    } else {
+                        listContainer.innerHTML = filteredTasks.map(function (task) {
+                            const meta = CATEGORY_META[task.category] || CATEGORY_META.KOR;
+                            return `
+                                <div class="bg-slate-900/95 rounded-3xl p-4 border-2 ${task.done ? 'border-blue-500 bg-blue-950/35' : 'border-blue-900/70'} shadow-sm flex items-center justify-between gap-3 transition">
+                                    <button type="button" onclick="window.toggleTask('${task.id}')" class="flex items-center gap-3.5 text-left flex-1 min-w-0 check-bounce">
+                                        <div class="w-8 h-8 rounded-2xl flex items-center justify-center border-2 shrink-0 transition ${task.done ? 'bg-blue-600 border-blue-300 text-white' : 'bg-slate-950 border-slate-700 text-transparent'}">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                                        </div>
+                                        <div class="min-w-0 flex-1">
+                                            <div class="flex items-center gap-1.5 flex-wrap mb-1">
+                                                <span class="inline-block px-2 py-0.5 rounded-lg text-[11px] font-bold ${meta.badge}">${meta.emoji} ${meta.name}</span>
+                                                <span class="text-[11px] text-blue-300/75">${task.patternLabel}</span>
+                                                ${task.amount ? `<span class="text-[11px] px-2 py-0.5 rounded-md bg-slate-800 text-slate-300 font-bold">${task.amount}</span>` : ''}
+                                            </div>
+                                            <p class="font-bold text-white text-sm sm:text-base break-words ${task.done ? 'line-through text-slate-400' : ''}">${task.title}</p>
+                                        </div>
+                                    </button>
+                                </div>
+                            `;
+                        }).join('');
+                    }
+                }
+
+                // 칭찬 한마디 렌더링
+                const notesList = document.getElementById('parent-notes-list');
+                if (notesList) {
+                    const dayNotes = Array.isArray(appState.notes[selKey]) ? appState.notes[selKey] : [];
+                    if (dayNotes.length === 0) {
+                        notesList.innerHTML = `<p class="text-xs text-slate-400 py-1">아직 오늘 남겨진 한마디가 없어요.</p>`;
+                    } else {
+                        notesList.innerHTML = dayNotes.map(function (n) {
+                            const emoji = n.author === 'mom' ? '👩' : (n.author === 'dad' ? '👨' : '👦');
+                            return `
+                                <div class="bg-slate-950/90 border border-blue-900/60 rounded-2xl px-3.5 py-2.5 flex items-start gap-2.5">
+                                    <span class="text-lg leading-none mt-0.5">${emoji}</span>
+                                    <div class="min-w-0 flex-1">
+                                        <span class="text-xs font-bold text-blue-300">${n.authorName || '가족'}</span>
+                                        <p class="text-sm text-slate-100 break-words">${n.text}</p>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('');
+                    }
+                }
+            }
+
+            // =========================================================
+            // 칭찬 스티커판 (뀽이·뚱이 수기 발급/회수/소원권 전용)
+            // =========================================================
+            window.adjustParentSticker = function (delta) {
+                if (!isParent()) {
+                    window.showCoreToast('칭찬 스티커는 뀽이·뚱이만 지급·회수할 수 있어요!');
+                    return;
+                }
+                const currentStars = Math.max(0, Number(appState.bonusStars || 0));
+                if (delta < 0 && currentStars <= 0) {
+                    window.showCoreToast('회수할 스티커가 없어요!');
+                    return;
+                }
+                appState.bonusStars = Math.max(0, currentStars + delta);
+                if (delta > 0) {
+                    triggerConfetti();
+                    window.showCoreToast(`${getParentName()}가 칭찬 별 +1개를 발급했어요! ⭐`);
+                } else {
+                    window.showCoreToast(`${getParentName()}가 칭찬 별 1개를 회수했어요.`);
+                }
+                saveStateAndSync();
+            };
+
+            window.redeemStickerReward = function () {
+                if (!isParent()) {
+                    window.showCoreToast('소원권 사용은 뀽이·뚱이만 할 수 있어요!');
+                    return;
+                }
+                const currentStars = Math.max(0, Number(appState.bonusStars || 0));
+                if (currentStars < 20) {
+                    window.showCoreToast(`별이 20개 필요해요! (현재 ${currentStars}개)`);
+                    return;
+                }
+                appState.bonusStars = currentStars - 20;
+                triggerConfetti();
+                window.showCoreToast(`${getParentName()}가 별 20개 소원권을 사용했어요! 🎁`);
+                saveStateAndSync();
+            };
+
+            function renderHistoryView() {
+                const stars = Math.max(0, Number(appState.bonusStars || 0));
+                const countEl = document.getElementById('total-stars-count');
+                if (countEl) countEl.textContent = `${stars}개`;
+
+                const lockBanner = document.getElementById('sticker-parent-lock-banner');
+                const controlsBox = document.getElementById('sticker-parent-controls');
+
+                if (isParent()) {
+                    if (lockBanner) lockBanner.classList.add('hidden');
+                    if (controlsBox) controlsBox.classList.remove('hidden');
+                } else {
+                    if (lockBanner) lockBanner.classList.remove('hidden');
+                    if (controlsBox) controlsBox.classList.add('hidden');
+                }
+
+                const gridEl = document.getElementById('sticker-grid');
+                if (gridEl) {
+                    const activeCount = stars === 0 ? 0 : ((stars - 1) % 20) + 1;
+                    let html = '';
+                    for (let i = 1; i <= 20; i++) {
+                        const isEarned = i <= activeCount;
+                        const displayNum = stars > 20 ? Math.floor((stars - 1) / 20) * 20 + i : i;
+                        html += `
+                            <div class="aspect-square rounded-2xl flex flex-col items-center justify-center border-2 transition ${isEarned ? 'bg-gradient-to-br from-blue-900 to-slate-950 border-amber-400 shadow-md' : 'bg-slate-950/90 border-dashed border-slate-800 text-slate-600'}">
+                                <span class="text-2xl ${isEarned ? '' : 'opacity-25'}">${isEarned ? '⭐' : '☆'}</span>
+                                <span class="text-[10px] font-bold mt-0.5 ${isEarned ? 'text-amber-300' : 'text-slate-500'}">${displayNum}</span>
+                            </div>
+                        `;
+                    }
+                    gridEl.innerHTML = html;
+                }
+            }
+
+            // =========================================================
+            // 패턴 설정 (뀽이·뚱이 전용)
+            // =========================================================
+            window.togglePatternOptions = function () {
+                const typeSel = document.getElementById('pattern-type');
+                const weeklyBox = document.getElementById('weekly-days-selector');
+                if (!typeSel || !weeklyBox) return;
+                if (typeSel.value === 'WEEKLY_DAYS') {
+                    weeklyBox.classList.remove('hidden');
+                } else {
+                    weeklyBox.classList.add('hidden');
+                }
+            };
+
+            window.addNewPattern = function () {
+                if (!isParent()) {
+                    window.showCoreToast('패턴 설정은 뀽이·뚱이만 할 수 있어요!');
+                    return;
+                }
+                const catEl = document.getElementById('pattern-category');
+                const typeEl = document.getElementById('pattern-type');
+                const titleEl = document.getElementById('pattern-title');
+                const amountEl = document.getElementById('pattern-amount');
+
+                const category = catEl ? catEl.value : 'KOR';
+                const patternType = typeEl ? typeEl.value : 'DAILY';
+                const title = titleEl ? titleEl.value.trim() : '';
+                const amount = amountEl ? amountEl.value.trim() : '';
+
+                if (!title) {
+                    window.showCoreToast('할 일 이름을 입력해 주세요!');
+                    return;
+                }
+
+                let days = [0, 1, 2, 3, 4, 5, 6];
+                let patternLabel = '매일';
+
+                if (patternType === 'WEEKDAYS') {
+                    days = [1, 2, 3, 4, 5];
+                    patternLabel = '평일(월~금)';
+                } else if (patternType === 'ALTERNATE') {
+                    days = [1, 3, 5];
+                    patternLabel = '순환(월·수·금)';
+                } else if (patternType === 'WEEKLY_DAYS') {
+                    const checked = Array.from(document.querySelectorAll('.day-checkbox:checked')).map(function (cb) {
+                        return Number(cb.value);
+                    });
+                    if (checked.length === 0) {
+                        window.showCoreToast('반복할 요일을 하나 이상 선택해 주세요!');
+                        return;
+                    }
+                    days = checked;
+                    const dayNames = { 1: '월', 2: '화', 3: '수', 4: '목', 5: '금', 6: '토', 0: '일' };
+                    patternLabel = checked.map(function (d) { return dayNames[d]; }).join('·');
+                }
+
+                appState.patterns.push({
+                    id: 'p_' + Date.now(),
+                    category,
+                    title,
+                    amount,
+                    patternType,
+                    days,
+                    patternLabel
+                });
+
+                if (titleEl) titleEl.value = '';
+                if (amountEl) amountEl.value = '';
+                document.querySelectorAll('.day-checkbox').forEach(function (cb) { cb.checked = false; });
+
+                window.showCoreToast('새 학습 패턴이 등록되었어요!');
+                saveStateAndSync();
+            };
+
+            window.deletePattern = function (patternId) {
+                if (!isParent()) {
+                    window.showCoreToast('패턴 삭제는 뀽이·뚱이만 할 수 있어요!');
+                    return;
+                }
+                appState.patterns = (appState.patterns || []).filter(function (p) { return p.id !== patternId; });
+                window.showCoreToast('패턴이 삭제되었어요.');
+                saveStateAndSync();
+            };
+
+            function renderPatternView() {
+                const lockBanner = document.getElementById('pattern-parent-lock-banner');
+                const formCard = document.getElementById('pattern-form-card');
+
+                if (isParent()) {
+                    if (lockBanner) lockBanner.classList.add('hidden');
+                    if (formCard) formCard.classList.remove('hidden');
+                } else {
+                    if (lockBanner) lockBanner.classList.remove('hidden');
+                    if (formCard) formCard.classList.add('hidden');
+                }
+
+                const container = document.getElementById('pattern-list-container');
+                if (!container) return;
+
+                if (!appState.patterns || appState.patterns.length === 0) {
+                    container.innerHTML = `<div class="bg-slate-900 border border-blue-900/70 rounded-3xl p-6 text-center text-xs text-slate-400">등록된 학습 패턴이 없어요.</div>`;
+                    return;
+                }
+
+                container.innerHTML = appState.patterns.map(function (p) {
+                    const meta = CATEGORY_META[p.category] || CATEGORY_META.KOR;
+                    return `
+                        <div class="bg-slate-900/95 border border-blue-900/70 rounded-3xl p-4 flex items-center justify-between gap-3">
+                            <div class="min-w-0">
+                                <div class="flex items-center gap-1.5 flex-wrap mb-1">
+                                    <span class="px-2 py-0.5 rounded-lg text-[11px] font-bold ${meta.badge}">${meta.emoji} ${meta.name}</span>
+                                    <span class="px-2 py-0.5 rounded-lg text-[11px] font-bold bg-blue-950 text-blue-300 border border-blue-800/60">${p.patternLabel}</span>
+                                    ${p.amount ? `<span class="text-[11px] text-slate-400 font-bold">· ${p.amount}</span>` : ''}
+                                </div>
+                                <p class="font-bold text-white text-sm sm:text-base truncate">${p.title}</p>
+                            </div>
+                            ${isParent() ? `
+                                <button type="button" onclick="window.deletePattern('${p.id}')" class="px-3 py-1.5 rounded-xl bg-rose-950/80 hover:bg-rose-900 text-rose-300 border border-rose-700/50 text-xs font-bold shrink-0 transition">
+                                    삭제
+                                </button>
+                            ` : ''}
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            // =========================================================
+            // 영단어 퀴즈/단어장(발음 지원) & 한자 퀴즈/단어장(소리 재생 없음)
+            // =========================================================
+            let vocabMode = 'quiz';
+            let hanjaMode = 'quiz';
+            let vocabQuizState = { index: 0, score: 0, answered: false, selectedOption: null, options: [] };
+            let hanjaQuizState = { index: 0, score: 0, answered: false, selectedOption: null, options: [] };
+
+            window.speakWord = function (text, lang) {
+                try {
+                    if (!('speechSynthesis' in window)) {
+                        window.showCoreToast('이 기기에서는 음성 읽어주기를 지원하지 않아요.');
+                        return;
+                    }
+                    window.speechSynthesis.cancel();
+                    const utter = new SpeechSynthesisUtterance(text);
+                    utter.lang = lang || 'en-US';
+                    utter.rate = 0.9;
+                    window.speechSynthesis.speak(utter);
+                } catch (e) {
+                    console.warn('TTS 오류:', e);
+                }
+            };
+
+            function buildQuizOptions(list, correctIndex, keyField) {
+                const correctItem = list[correctIndex];
+                const others = list.filter(function (_, idx) { return idx !== correctIndex; });
+                const shuffledOthers = others.slice().sort(function () { return Math.random() - 0.5; }).slice(0, 3);
+                const pool = [correctItem].concat(shuffledOthers).map(function (item) {
+                    return item[keyField];
+                });
+                return pool.sort(function () { return Math.random() - 0.5; });
+            }
+
+            function ensureVocabOptions() {
+                const list = appState.vocabList || [];
+                if (list.length === 0) return;
+                if (vocabQuizState.index >= list.length) vocabQuizState.index = 0;
+                if (!vocabQuizState.options || vocabQuizState.options.length === 0) {
+                    vocabQuizState.options = buildQuizOptions(list, vocabQuizState.index, 'meaning');
+                }
+            }
+
+            window.setVocabMode = function (mode) {
+                vocabMode = mode;
+                const qBtn = document.getElementById('vocab-mode-quiz');
+                const mBtn = document.getElementById('vocab-mode-manage');
+                const qPanel = document.getElementById('vocab-quiz-panel');
+                const mPanel = document.getElementById('vocab-manage-panel');
+
+                if (mode === 'quiz') {
+                    if (qBtn) qBtn.className = 'px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold bg-blue-500 text-white shadow-sm transition';
+                    if (mBtn) mBtn.className = 'px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold text-blue-200 hover:text-white transition';
+                    if (qPanel) qPanel.classList.remove('hidden');
+                    if (mPanel) mPanel.classList.add('hidden');
+                } else {
+                    if (mBtn) mBtn.className = 'px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold bg-blue-500 text-white shadow-sm transition';
+                    if (qBtn) qBtn.className = 'px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold text-blue-200 hover:text-white transition';
+                    if (mPanel) mPanel.classList.remove('hidden');
+                    if (qPanel) qPanel.classList.add('hidden');
+                }
+                renderVocabView();
+            };
+
+            window.answerVocabQuiz = function (chosenMeaning) {
+                const list = appState.vocabList || [];
+                const target = list[vocabQuizState.index];
+                if (!target || vocabQuizState.answered) return;
+                vocabQuizState.answered = true;
+                vocabQuizState.selectedOption = chosenMeaning;
+                if (chosenMeaning === target.meaning) {
+                    vocabQuizState.score += 1;
+                    triggerConfetti();
+                    window.showCoreToast('정답이에요! 짝짝짝 👏');
+                } else {
+                    window.showCoreToast(`아쉬워요! 정답은 '${target.meaning}'이에요.`);
+                }
+                renderVocabView();
+            };
+
+            window.nextVocabQuiz = function () {
+                const list = appState.vocabList || [];
+                if (list.length === 0) return;
+                const nextIdx = (vocabQuizState.index + 1) % list.length;
+                vocabQuizState.index = nextIdx;
+                vocabQuizState.answered = false;
+                vocabQuizState.selectedOption = null;
+                vocabQuizState.options = buildQuizOptions(list, nextIdx, 'meaning');
+                renderVocabView();
+            };
+
+            window.addVocabWord = function () {
+                if (!isParent()) {
+                    window.showCoreToast('영단어 등록은 뀽이·뚱이만 할 수 있어요!');
+                    return;
+                }
+                const wInput = document.getElementById('vocab-word-input');
+                const mInput = document.getElementById('vocab-meaning-input');
+                const word = wInput ? wInput.value.trim() : '';
+                const meaning = mInput ? mInput.value.trim() : '';
+                if (!word || !meaning) {
+                    window.showCoreToast('영어 단어와 뜻을 모두 입력해 주세요!');
+                    return;
+                }
+                appState.vocabList.push({ id: 'v_' + Date.now(), word, meaning });
+                if (wInput) wInput.value = '';
+                if (mInput) mInput.value = '';
+                vocabQuizState.options = buildQuizOptions(appState.vocabList, vocabQuizState.index % appState.vocabList.length, 'meaning');
+                window.showCoreToast(`'${word}' 영단어가 추가되었어요!`);
+                saveStateAndSync();
+            };
+
+            window.deleteVocabWord = function (id) {
+                if (!isParent()) {
+                    window.showCoreToast('영단어 삭제는 뀽이·뚱이만 할 수 있어요!');
+                    return;
+                }
+                appState.vocabList = (appState.vocabList || []).filter(function (v) { return v.id !== id; });
+                vocabQuizState.index = 0;
+                vocabQuizState.answered = false;
+                vocabQuizState.options = appState.vocabList.length ? buildQuizOptions(appState.vocabList, 0, 'meaning') : [];
+                window.showCoreToast('영단어가 삭제되었어요.');
+                saveStateAndSync();
+            };
+
+            function renderVocabView() {
+                ensureVocabOptions();
+                const list = appState.vocabList || [];
+                const qPanel = document.getElementById('vocab-quiz-panel');
+
+                if (qPanel) {
+                    if (list.length === 0) {
+                        qPanel.innerHTML = `<div class="bg-slate-900 border border-blue-900/70 rounded-3xl p-7 text-center text-sm text-slate-300">등록된 영단어가 없어요. '단어 등록/발음'에서 단어를 추가해 보세요!</div>`;
+                    } else {
+                        const qItem = list[vocabQuizState.index % list.length];
+                        const safeWord = qItem.word.replace(/'/g, "\\'");
+                        const optsHtml = vocabQuizState.options.map(function (opt) {
+                            const safeOpt = opt.replace(/'/g, "\\'");
+                            let cls = 'bg-slate-950 hover:bg-blue-950/70 border-blue-800/70 text-white';
+                            if (vocabQuizState.answered) {
+                                if (opt === qItem.meaning) cls = 'bg-blue-600 border-amber-300 text-white';
+                                else if (opt === vocabQuizState.selectedOption) cls = 'bg-rose-950 border-rose-500 text-rose-200';
+                                else cls = 'bg-slate-950/60 border-slate-800 text-slate-500';
+                            }
+                            return `
+                                <button type="button" onclick="window.answerVocabQuiz('${safeOpt}')" class="w-full py-3.5 px-4 rounded-2xl border-2 font-bold text-sm sm:text-base text-left transition ${cls}">
+                                    ${opt}
+                                </button>
+                            `;
+                        }).join('');
+
+                        qPanel.innerHTML = `
+                            <div class="bg-slate-900 border border-blue-900/70 rounded-3xl p-6 space-y-4 shadow-sm">
+                                <div class="flex items-center justify-between text-xs text-blue-300 font-bold">
+                                    <span>문제 ${(vocabQuizState.index % list.length) + 1} / ${list.length}</span>
+                                    <span>맞힌 개수: ${vocabQuizState.score}개</span>
+                                </div>
+                                <div class="bg-slate-950 border border-blue-800/70 rounded-2xl p-6 text-center space-y-3">
+                                    <p class="font-kid text-4xl sm:text-5xl text-white">${qItem.word}</p>
+                                    <button type="button" onclick="window.speakWord('${safeWord}', 'en-US')" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs sm:text-sm font-bold shadow transition">
+                                        <span>🔊</span> <span>영어 발음 듣기</span>
+                                    </button>
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                    ${optsHtml}
+                                </div>
+                                ${vocabQuizState.answered ? `
+                                    <button type="button" onclick="window.nextVocabQuiz()" class="w-full py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm shadow transition">
+                                        다음 문제 풀기 →
+                                    </button>
+                                ` : ''}
+                            </div>
+                        `;
+                    }
+                }
+
+                // 영단어 관리 리스트
+                const lockBanner = document.getElementById('vocab-parent-lock-banner');
+                const addCard = document.getElementById('vocab-add-form-card');
+                if (isParent()) {
+                    if (lockBanner) lockBanner.classList.add('hidden');
+                    if (addCard) addCard.classList.remove('hidden');
+                } else {
+                    if (lockBanner) lockBanner.classList.remove('hidden');
+                    if (addCard) addCard.classList.add('hidden');
+                }
+
+                const countLabel = document.getElementById('vocab-count-label');
+                if (countLabel) countLabel.textContent = String(list.length);
+
+                const listContainer = document.getElementById('vocab-list-container');
+                if (listContainer) {
+                    listContainer.innerHTML = list.map(function (v) {
+                        const safeWord = v.word.replace(/'/g, "\\'");
+                        return `
+                            <div class="bg-slate-900 border border-blue-900/70 rounded-2xl px-4 py-3 flex items-center justify-between gap-2">
+                                <div class="min-w-0">
+                                    <span class="font-kid text-xl text-white mr-2">${v.word}</span>
+                                    <span class="text-sm text-blue-200 font-bold">${v.meaning}</span>
+                                </div>
+                                <div class="flex items-center gap-1.5 shrink-0">
+                                    <button type="button" onclick="window.speakWord('${safeWord}', 'en-US')" class="p-2 rounded-xl bg-blue-950 hover:bg-blue-900 text-blue-200 border border-blue-700/60 text-xs font-bold">🔊</button>
+                                    ${isParent() ? `<button type="button" onclick="window.deleteVocabWord('${v.id}')" class="p-2 rounded-xl bg-rose-950/80 hover:bg-rose-900 text-rose-300 text-xs font-bold">삭제</button>` : ''}
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+            }
+
+            // 한자 퀴즈 & 관리 (뜻과 음 재생/듣기 기능 전혀 없음)
+            function ensureHanjaOptions() {
+                const list = appState.hanjaList || [];
+                if (list.length === 0) return;
+                if (hanjaQuizState.index >= list.length) hanjaQuizState.index = 0;
+                if (!hanjaQuizState.options || hanjaQuizState.options.length === 0) {
+                    hanjaQuizState.options = buildQuizOptions(list, hanjaQuizState.index, 'meaning');
+                }
+            }
+
+            window.setHanjaMode = function (mode) {
+                hanjaMode = mode;
+                const qBtn = document.getElementById('hanja-mode-quiz');
+                const mBtn = document.getElementById('hanja-mode-manage');
+                const qPanel = document.getElementById('hanja-quiz-panel');
+                const mPanel = document.getElementById('hanja-manage-panel');
+
+                if (mode === 'quiz') {
+                    if (qBtn) qBtn.className = 'px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold bg-blue-500 text-white shadow-sm transition';
+                    if (mBtn) mBtn.className = 'px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold text-blue-200 hover:text-white transition';
+                    if (qPanel) qPanel.classList.remove('hidden');
+                    if (mPanel) mPanel.classList.add('hidden');
+                } else {
+                    if (mBtn) mBtn.className = 'px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold bg-blue-500 text-white shadow-sm transition';
+                    if (qBtn) qBtn.className = 'px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold text-blue-200 hover:text-white transition';
+                    if (mPanel) mPanel.classList.remove('hidden');
+                    if (qPanel) qPanel.classList.add('hidden');
+                }
+                renderHanjaView();
+            };
+
+            window.answerHanjaQuiz = function (chosenMeaning) {
+                const list = appState.hanjaList || [];
+                const target = list[hanjaQuizState.index];
+                if (!target || hanjaQuizState.answered) return;
+                hanjaQuizState.answered = true;
+                hanjaQuizState.selectedOption = chosenMeaning;
+                if (chosenMeaning === target.meaning) {
+                    hanjaQuizState.score += 1;
+                    triggerConfetti();
+                    window.showCoreToast('정답이에요! 한자 박사님 최고예요 👏');
+                } else {
+                    window.showCoreToast(`아쉬워요! 정답은 '${target.meaning}'이에요.`);
+                }
+                renderHanjaView();
+            };
+
+            window.nextHanjaQuiz = function () {
+                const list = appState.hanjaList || [];
+                if (list.length === 0) return;
+                const nextIdx = (hanjaQuizState.index + 1) % list.length;
+                hanjaQuizState.index = nextIdx;
+                hanjaQuizState.answered = false;
+                hanjaQuizState.selectedOption = null;
+                hanjaQuizState.options = buildQuizOptions(list, nextIdx, 'meaning');
+                renderHanjaView();
+            };
+
+            window.addHanjaWord = function () {
+                if (!isParent()) {
+                    window.showCoreToast('한자 등록은 뀽이·뚱이만 할 수 있어요!');
+                    return;
+                }
+                const cInput = document.getElementById('hanja-char-input');
+                const mInput = document.getElementById('hanja-meaning-input');
+                const char = cInput ? cInput.value.trim() : '';
+                const meaning = mInput ? mInput.value.trim() : '';
+                if (!char || !meaning) {
+                    window.showCoreToast('한자와 뜻·음을 모두 입력해 주세요!');
+                    return;
+                }
+                appState.hanjaList.push({ id: 'h_' + Date.now(), char, meaning });
+                if (cInput) cInput.value = '';
+                if (mInput) mInput.value = '';
+                hanjaQuizState.options = buildQuizOptions(appState.hanjaList, hanjaQuizState.index % appState.hanjaList.length, 'meaning');
+                window.showCoreToast(`'${char}' 한자가 추가되었어요!`);
+                saveStateAndSync();
+            };
+
+            window.deleteHanjaWord = function (id) {
+                if (!isParent()) {
+                    window.showCoreToast('한자 삭제는 뀽이·뚱이만 할 수 있어요!');
+                    return;
+                }
+                appState.hanjaList = (appState.hanjaList || []).filter(function (h) { return h.id !== id; });
+                hanjaQuizState.index = 0;
+                hanjaQuizState.answered = false;
+                hanjaQuizState.options = appState.hanjaList.length ? buildQuizOptions(appState.hanjaList, 0, 'meaning') : [];
+                window.showCoreToast('한자가 삭제되었어요.');
+                saveStateAndSync();
+            };
+
+            function renderHanjaView() {
+                ensureHanjaOptions();
+                const list = appState.hanjaList || [];
+                const qPanel = document.getElementById('hanja-quiz-panel');
+
+                if (qPanel) {
+                    if (list.length === 0) {
+                        qPanel.innerHTML = `<div class="bg-slate-900 border border-blue-900/70 rounded-3xl p-7 text-center text-sm text-slate-300">등록된 한자가 없어요. '한자 등록'에서 한자를 추가해 보세요!</div>`;
+                    } else {
+                        const qItem = list[hanjaQuizState.index % list.length];
+                        const optsHtml = hanjaQuizState.options.map(function (opt) {
+                            const safeOpt = opt.replace(/'/g, "\\'");
+                            let cls = 'bg-slate-950 hover:bg-blue-950/70 border-blue-800/70 text-white';
+                            if (hanjaQuizState.answered) {
+                                if (opt === qItem.meaning) cls = 'bg-blue-600 border-amber-300 text-white';
+                                else if (opt === hanjaQuizState.selectedOption) cls = 'bg-rose-950 border-rose-500 text-rose-200';
+                                else cls = 'bg-slate-950/60 border-slate-800 text-slate-500';
+                            }
+                            return `
+                                <button type="button" onclick="window.answerHanjaQuiz('${safeOpt}')" class="w-full py-3.5 px-4 rounded-2xl border-2 font-bold text-sm sm:text-base text-left transition ${cls}">
+                                    ${opt}
+                                </button>
+                            `;
+                        }).join('');
+
+                        qPanel.innerHTML = `
+                            <div class="bg-slate-900 border border-blue-900/70 rounded-3xl p-6 space-y-4 shadow-sm">
+                                <div class="flex items-center justify-between text-xs text-blue-300 font-bold">
+                                    <span>문제 ${(hanjaQuizState.index % list.length) + 1} / ${list.length}</span>
+                                    <span>맞힌 개수: ${hanjaQuizState.score}개</span>
+                                </div>
+                                <div class="bg-slate-950 border border-blue-800/70 rounded-2xl p-6 text-center space-y-2">
+                                    <p class="font-kid text-6xl text-amber-300">${qItem.char}</p>
+                                    <p class="text-xs text-blue-300/75 font-bold">알맞은 뜻과 음을 선택해 보세요</p>
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                    ${optsHtml}
+                                </div>
+                                ${hanjaQuizState.answered ? `
+                                    <button type="button" onclick="window.nextHanjaQuiz()" class="w-full py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm shadow transition">
+                                        다음 한자 풀기 →
+                                    </button>
+                                ` : ''}
+                            </div>
+                        `;
+                    }
+                }
+
+                const lockBanner = document.getElementById('hanja-parent-lock-banner');
+                const addCard = document.getElementById('hanja-add-form-card');
+                if (isParent()) {
+                    if (lockBanner) lockBanner.classList.add('hidden');
+                    if (addCard) addCard.classList.remove('hidden');
+                } else {
+                    if (lockBanner) lockBanner.classList.remove('hidden');
+                    if (addCard) addCard.classList.add('hidden');
+                }
+
+                const countLabel = document.getElementById('hanja-count-label');
+                if (countLabel) countLabel.textContent = String(list.length);
+
+                const listContainer = document.getElementById('hanja-list-container');
+                if (listContainer) {
+                    listContainer.innerHTML = list.map(function (h) {
+                        return `
+                            <div class="bg-slate-900 border border-blue-900/70 rounded-2xl px-4 py-3 flex items-center justify-between gap-2">
+                                <div class="flex items-center gap-3 min-w-0">
+                                    <span class="font-kid text-3xl text-amber-300">${h.char}</span>
+                                    <span class="text-sm text-blue-200 font-bold truncate">${h.meaning}</span>
+                                </div>
+                                ${isParent() ? `<button type="button" onclick="window.deleteHanjaWord('${h.id}')" class="p-2 rounded-xl bg-rose-950/80 hover:bg-rose-900 text-rose-300 text-xs font-bold shrink-0">삭제</button>` : ''}
+                            </div>
+                        `;
+                    }).join('');
+                }
+            }
+
+            // =========================================================
+            // 시간 재기 (카운트다운 타이머 & 스톱워치)
+            // =========================================================
+            let timerMode = 'countdown';
+            let timerSubject = 'KOR';
+            let remainingSec = 600;
+            let elapsedSec = 0;
+            let timerRunning = false;
+            let timerInterval = null;
+
+            function addTodayFocusSeconds(sec) {
+                if (sec <= 0) return;
+                const key = formatDateKey(new Date());
+                appState.focusSecondsByDate[key] = (appState.focusSecondsByDate[key] || 0) + sec;
+                try {
+                    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(appState));
+                } catch (e) {}
+                if (typeof window.__syncStateToFirestore === 'function') {
+                    window.__syncStateToFirestore();
+                }
+            }
+
+            function formatClock(totalSeconds) {
+                const s = Math.max(0, Math.floor(totalSeconds));
+                const mins = Math.floor(s / 60);
+                const secs = s % 60;
+                return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+            }
+
+            function updateTimerUI() {
+                const displayEl = document.getElementById('timer-display');
+                const statusEl = document.getElementById('timer-status-label');
+                const toggleBtn = document.getElementById('timer-toggle-btn');
+                const presetsBox = document.getElementById('timer-presets-box');
+                const todayTotalEl = document.getElementById('timer-today-total');
+
+                if (displayEl) {
+                    displayEl.textContent = timerMode === 'countdown' ? formatClock(remainingSec) : formatClock(elapsedSec);
+                }
+                if (statusEl) {
+                    if (timerRunning) {
+                        statusEl.textContent = timerMode === 'countdown' ? '집중 타이머 작동 중...' : '스톱워치 측정 중...';
+                    } else {
+                        statusEl.textContent = timerMode === 'countdown' ? '집중 타이머 준비됨' : '스톱워치 준비됨';
+                    }
+                }
+                if (toggleBtn) {
+                    toggleBtn.textContent = timerRunning ? '⏸ 일시정지' : '▶ 시작하기';
+                }
+                if (presetsBox) {
+                    if (timerMode === 'countdown') presetsBox.classList.remove('hidden');
+                    else presetsBox.classList.add('hidden');
+                }
+                if (todayTotalEl) {
+                    const key = formatDateKey(new Date());
+                    const totalTodaySec = Math.floor(appState.focusSecondsByDate[key] || 0);
+                    todayTotalEl.textContent = `${Math.floor(totalTodaySec / 60)}분 ${totalTodaySec % 60}초`;
+                }
+            }
+
+            window.setTimerMode = function (mode) {
+                if (timerRunning) {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                    timerRunning = false;
+                }
+                timerMode = mode;
+                const cBtn = document.getElementById('timer-mode-countdown');
+                const sBtn = document.getElementById('timer-mode-stopwatch');
+                if (mode === 'countdown') {
+                    if (cBtn) cBtn.className = 'px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold bg-blue-500 text-white shadow-sm transition';
+                    if (sBtn) sBtn.className = 'px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold text-blue-200 hover:text-white transition';
+                } else {
+                    if (sBtn) sBtn.className = 'px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold bg-blue-500 text-white shadow-sm transition';
+                    if (cBtn) cBtn.className = 'px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold text-blue-200 hover:text-white transition';
+                }
+                updateTimerUI();
+            };
+
+            window.selectTimerSubject = function (sub) {
+                timerSubject = sub;
+                ['KOR', 'ENG', 'MATH'].forEach(function (s) {
+                    const btn = document.getElementById('timer-sub-' + s);
+                    if (!btn) return;
+                    if (s === sub) {
+                        btn.className = 'px-3 py-1.5 rounded-xl text-xs font-bold bg-blue-600 text-white border-2 border-blue-400 transition';
+                    } else {
+                        btn.className = 'px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-950 text-slate-300 border border-slate-700 transition';
+                    }
+                });
+            };
+
+            window.addCountdownDuration = function (mins, secs) {
+                timerMode = 'countdown';
+                remainingSec = Math.max(0, remainingSec + mins * 60 + secs);
+                window.setTimerMode('countdown');
+            };
+
+            window.applyCustomCountdown = function () {
+                const mEl = document.getElementById('timer-custom-minutes');
+                const sEl = document.getElementById('timer-custom-seconds');
+                const mins = Math.max(0, Math.min(120, Number(mEl ? mEl.value : 0) || 0));
+                const secs = Math.max(0, Math.min(59, Number(sEl ? sEl.value : 0) || 0));
+                remainingSec = mins * 60 + secs;
+                window.setTimerMode('countdown');
+                window.showCoreToast(`타이머가 ${mins}분 ${secs}초로 설정되었어요!`);
+            };
+
+            window.toggleTimerRun = function () {
+                if (timerRunning) {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                    timerRunning = false;
+                    updateTimerUI();
+                    return;
+                }
+                if (timerMode === 'countdown' && remainingSec <= 0) {
+                    remainingSec = 600;
+                }
+                timerRunning = true;
+                updateTimerUI();
+
+                timerInterval = setInterval(function () {
+                    if (timerMode === 'countdown') {
+                        if (remainingSec > 0) {
+                            remainingSec -= 1;
+                            addTodayFocusSeconds(1);
+                            updateTimerUI();
+                        } else {
+                            clearInterval(timerInterval);
+                            timerInterval = null;
+                            timerRunning = false;
+                            updateTimerUI();
+                            triggerConfetti();
+                            window.showCoreToast('집중 타이머 완료! 정말 잘했어요! ⏱️');
+                        }
+                    } else {
+                        elapsedSec += 1;
+                        addTodayFocusSeconds(1);
+                        updateTimerUI();
+                    }
+                }, 1000);
+            };
+
+            window.resetTimer = function () {
+                if (timerInterval) {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                }
+                timerRunning = false;
+                if (timerMode === 'countdown') remainingSec = 600;
+                else elapsedSec = 0;
+                updateTimerUI();
+            };
+
+            // =========================================================
+            // 전체 화면 렌더링 통합
+            // =========================================================
+            function renderAllViews() {
+                syncUserRoleButtons();
+                renderTodayView();
+                renderHistoryView();
+                renderPatternView();
+                renderVocabView();
+                renderHanjaView();
+                updateTimerUI();
+            }
+
+            window.__renderPlannerFromRemote = function (remoteData) {
+                if (!remoteData || typeof remoteData !== 'object') return;
+                if (Array.isArray(remoteData.patterns)) appState.patterns = remoteData.patterns;
+                if (remoteData.records && typeof remoteData.records === 'object') appState.records = remoteData.records;
+                if (remoteData.notes && typeof remoteData.notes === 'object') appState.notes = remoteData.notes;
+                if (typeof remoteData.bonusStars === 'number') appState.bonusStars = Math.max(0, remoteData.bonusStars);
+                if (Array.isArray(remoteData.vocabList) && remoteData.vocabList.length) appState.vocabList = remoteData.vocabList;
+                if (Array.isArray(remoteData.hanjaList) && remoteData.hanjaList.length) appState.hanjaList = remoteData.hanjaList;
+                if (remoteData.focusSecondsByDate && typeof remoteData.focusSecondsByDate === 'object') appState.focusSecondsByDate = remoteData.focusSecondsByDate;
+                try {
+                    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(appState));
+                } catch (e) {}
+                renderAllViews();
+            };
+
+            // PWA 홈 화면 추가용 인라인 아이콘 및 Manifest 동적 등록
+            try {
+                const iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192"><rect width="192" height="192" rx="42" fill="#0B1120"/><rect x="10" y="10" width="172" height="172" rx="34" fill="none" stroke="#EAB308" stroke-width="6"/><text x="96" y="88" text-anchor="middle" fill="#60A5FA" font-family="sans-serif" font-size="38" font-weight="900">IUFC</text><text x="96" y="138" text-anchor="middle" fill="#F8FAFC" font-family="sans-serif" font-size="34" font-weight="800">뀨뀨</text></svg>`;
+                const iconUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(iconSvg);
+
+                const appleLink = document.createElement('link');
+                appleLink.rel = 'apple-touch-icon';
+                appleLink.href = iconUrl;
+                document.head.appendChild(appleLink);
+
+                const manifestData = {
+                    name: '뀨뀨 매일 미션 플래너',
+                    short_name: '뀨뀨 미션',
+                    start_url: './',
+                    scope: './',
+                    display: 'standalone',
+                    background_color: '#0B1120',
+                    theme_color: '#0B1120',
+                    icons: [{ src: iconUrl, sizes: '192x192', type: 'image/svg+xml', purpose: 'any' }]
+                };
+                const manifestBlob = new Blob([JSON.stringify(manifestData)], { type: 'application/manifest+json' });
+                const manifestLink = document.createElement('link');
+                manifestLink.rel = 'manifest';
+                manifestLink.href = URL.createObjectURL(manifestBlob);
+                document.head.appendChild(manifestLink);
+            } catch (e) {}
+
+            renderAllViews();
+        })();
+    </script>
+
+    <!-- Firebase Firestore 실시간 동기화 -->
+    <script type="module">
+        const badgeEl = document.getElementById('sync-badge');
+        const appState = window.__plannerAppState;
+
+        function setSyncBadge(text, ok) {
+            if (!badgeEl) return;
+            badgeEl.textContent = text;
+            badgeEl.className = ok
+                ? 'text-[10px] px-2 py-0.5 rounded-full bg-blue-950 text-blue-300 border border-blue-700/60 font-bold'
+                : 'text-[10px] px-2 py-0.5 rounded-full bg-amber-950 text-amber-300 border border-amber-700/60 font-bold';
+        }
+
+        try {
+            const [{ initializeApp }, { getAuth, signInAnonymously }, { getFirestore, doc, setDoc, onSnapshot }] = await Promise.all([
+                import("https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js"),
+                import("https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js"),
+                import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js")
+            ]);
+
+            const firebaseConfig = {
+                apiKey: "AIzaSyDVXVqEPZzYXxGzvzUjvcT_i-UzKMTOKn0",
+                authDomain: "yoonjae-33b39.firebaseapp.com",
+                projectId: "yoonjae-33b39",
+                storageBucket: "yoonjae-33b39.firebasestorage.app",
+                messagingSenderId: "541441504584",
+                appId: "1:541441504584:web:905d53f01d19d8c8576f7d"
+            };
+
+            const app = initializeApp(firebaseConfig);
+            const auth = getAuth(app);
+            const db = getFirestore(app);
+
+            try {
+                await signInAnonymously(auth);
+            } catch (authErr) {
+                console.warn('익명 로그인 안내:', authErr);
+            }
+
+            const sharedDocRef = doc(db, 'families', 'gyugyu_family');
+            let isApplyingRemote = false;
+
+            window.__syncStateToFirestore = async function () {
+                if (isApplyingRemote || !appState) return;
+                try {
+                    await setDoc(sharedDocRef, {
+                        patterns: appState.patterns,
+                        records: appState.records,
+                        notes: appState.notes,
+                        bonusStars: appState.bonusStars,
+                        vocabList: appState.vocabList,
+                        hanjaList: appState.hanjaList,
+                        focusSecondsByDate: appState.focusSecondsByDate,
+                        updatedAt: Date.now()
+                    }, { merge: true });
+                    setSyncBadge('실시간 연동 중', true);
+                } catch (writeErr) {
+                    console.warn('Firestore 저장 폴백:', writeErr);
+                    setSyncBadge('로컬 저장 중', false);
+                }
+            };
+
+            onSnapshot(sharedDocRef, function (snap) {
+                if (snap.exists() && typeof window.__renderPlannerFromRemote === 'function') {
+                    isApplyingRemote = true;
+                    try {
+                        window.__renderPlannerFromRemote(snap.data());
+                    } finally {
+                        isApplyingRemote = false;
+                    }
+                    setSyncBadge('실시간 연동 중', true);
+                } else if (!snap.exists() && appState) {
+                    window.__syncStateToFirestore();
+                    setSyncBadge('실시간 연동 중', true);
+                }
+            }, function (snapErr) {
+                console.warn('Firestore 구독 폴백:', snapErr);
+                setSyncBadge('로컬 저장 중', false);
+            });
+        } catch (initErr) {
+            console.warn('Firebase 초기화 폴백:', initErr);
+            setSyncBadge('로컬 저장 중', false);
+        }
+    </script>
+</body>
+</html>
